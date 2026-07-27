@@ -78,8 +78,8 @@
     <div>{{ $products->links() }}</div>
 
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center">
-            <div class="absolute inset-0 bg-slate-900/50" wire:click="$set('showForm', false)"></div>
+        <div class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
+            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" wire:click="$set('showForm', false)"></div>
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <h3 class="text-lg font-semibold text-slate-800">
                     {{ $editingId ? 'Editar producto' : 'Nuevo producto' }}

@@ -187,7 +187,7 @@ new class extends Component
     </aside>
 
     {{-- Barra superior --}}
-    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:pl-72">
+    <header class="sticky top-0 z-30 border-b border-slate-200 bg-white lg:pl-72">
         <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
             <button class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 lg:hidden"
                     @click="sidebarOpen = true" aria-label="Abrir menú">

@@ -38,7 +38,7 @@
 
         {{-- Modal global de confirmación (homologa los confirm() nativos) --}}
         <div x-data x-show="$store.confirm.show" x-cloak
-             class="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-4"
+             class="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4"
              @keydown.escape.window="$store.confirm.cancel()">
             <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" @click="$store.confirm.cancel()"></div>
             <div class="relative w-full rounded-t-2xl bg-white p-6 shadow-2xl sm:max-w-md sm:rounded-2xl"

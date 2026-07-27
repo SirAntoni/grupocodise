@@ -109,8 +109,8 @@
     <div>{{ $receivables->links() }}</div>
 
     @if ($showPaymentForm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-slate-900/50" wire:click="$set('showPaymentForm', false)"></div>
+        <div class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
+            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" wire:click="$set('showPaymentForm', false)"></div>
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
                 <h3 class="text-lg font-semibold text-slate-800">Registrar pago</h3>
 

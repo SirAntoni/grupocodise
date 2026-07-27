@@ -172,8 +172,8 @@
     @endif
 
     @if ($showAnnulForm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-slate-900/50" wire:click="$set('showAnnulForm', false)"></div>
+        <div class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
+            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" wire:click="$set('showAnnulForm', false)"></div>
             <div class="relative w-full max-w-lg space-y-4 rounded-xl bg-white p-4 shadow-xl sm:p-6">
                 <h3 class="text-lg font-semibold text-slate-900">Anular factura {{ $invoice->full_number }}</h3>
                 <p class="text-sm text-slate-500">

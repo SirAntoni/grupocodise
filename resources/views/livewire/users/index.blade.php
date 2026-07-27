@@ -59,7 +59,7 @@
     <div class="pt-1">{{ $users->links() }}</div>
 
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+        <div class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
             <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" wire:click="$set('showForm', false)"></div>
             <div class="relative max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 shadow-2xl sm:max-w-lg sm:rounded-2xl space-y-4">
                 <h3 class="text-lg font-semibold text-slate-800">

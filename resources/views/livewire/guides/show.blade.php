@@ -138,8 +138,8 @@
     </div>
 
     @if ($showAnnulForm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-slate-900/50" wire:click="$set('showAnnulForm', false)"></div>
+        <div class="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-4">
+            <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" wire:click="$set('showAnnulForm', false)"></div>
             <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
                 <h3 class="text-lg font-semibold text-slate-800">Anular guía {{ $guide->full_number }}</h3>
                 <p class="text-sm text-slate-500">Se restituirá el stock de todos los ítems despachados.</p>
