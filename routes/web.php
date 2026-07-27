@@ -103,6 +103,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('series', App\Livewire\SeriesAdmin\Index::class)->name('series.index');
     });
 
+    Route::view('manual', 'manual')->name('manual');
     Route::view('perfil', 'profile')->name('profile');
 });
 

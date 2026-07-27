@@ -82,6 +82,7 @@ it('todas las páginas del sistema responden correctamente', function () {
 
     $routes = [
         'panel' => route('dashboard'),
+        'manual' => route('manual'),
         'perfil' => route('profile'),
         'clientes' => route('clientes.index'),
         'productos' => route('productos.index'),
