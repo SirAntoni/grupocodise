@@ -208,7 +208,7 @@
             <x-secondary-button>Cancelar</x-secondary-button>
         </a>
         <x-secondary-button wire:click="saveDraft">Guardar borrador</x-secondary-button>
-        <x-primary-button wire:click="issue" wire:confirm="Al emitir se asignará numeración y se descontará stock. ¿Continuar?">
+        <x-primary-button @click="$store.confirm.open('Al emitir se asignará numeración correlativa y se descontará el stock despachado.', () => $wire.issue(), { title: 'Emitir guía', confirmText: 'Sí, emitir' })">
             Emitir guía
         </x-primary-button>
     </div>

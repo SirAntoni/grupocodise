@@ -2,11 +2,11 @@
     <x-slot name="actions">
         @if ($guide->isDraft())
             @can('guides.manage')
-                <x-danger-button wire:click="deleteDraft" wire:confirm="¿Eliminar este borrador?">Eliminar borrador</x-danger-button>
+                <x-danger-button @click="$store.confirm.open('¿Eliminar este borrador de guía?', () => $wire.deleteDraft(), { danger: true, confirmText: 'Sí, eliminar' })">Eliminar borrador</x-danger-button>
                 <a href="{{ route('guias.editar', ['dispatchGuide' => $guide->id]) }}" wire:navigate>
                     <x-secondary-button>Editar</x-secondary-button>
                 </a>
-                <x-primary-button wire:click="issue" wire:confirm="Al emitir se asignará numeración y se descontará stock. ¿Continuar?">
+                <x-primary-button @click="$store.confirm.open('Al emitir se asignará numeración correlativa y se descontará el stock despachado.', () => $wire.issue(), { title: 'Emitir guía', confirmText: 'Sí, emitir' })">
                     Emitir guía
                 </x-primary-button>
             @endcan

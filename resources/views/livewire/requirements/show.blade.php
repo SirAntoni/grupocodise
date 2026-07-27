@@ -5,7 +5,7 @@
                 <a href="{{ route('requerimientos.editar', $requirement) }}" wire:navigate>
                     <x-secondary-button>Editar</x-secondary-button>
                 </a>
-                <x-danger-button wire:click="annul" wire:confirm="¿Anular este requerimiento?">Anular</x-danger-button>
+                <x-danger-button @click="$store.confirm.open('¿Anular este requerimiento?', () => $wire.annul(), { danger: true, confirmText: 'Sí, anular' })">Anular</x-danger-button>
             @endcan
             @can('guides.manage')
                 <x-primary-button wire:click="createGuide">Generar guía</x-primary-button>

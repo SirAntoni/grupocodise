@@ -6,7 +6,7 @@
             </a>
         @endcan
         @can('delete', $invoice)
-            <x-danger-button wire:click="deleteDraft" wire:confirm="¿Eliminar este borrador? Las guías quedarán libres.">
+            <x-danger-button @click="$store.confirm.open('¿Eliminar este borrador de factura? Las guías quedarán libres para refacturar.', () => $wire.deleteDraft(), { danger: true, confirmText: 'Sí, eliminar' })">
                 Eliminar borrador
             </x-danger-button>
         @endcan

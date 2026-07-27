@@ -114,8 +114,7 @@
             </a>
             <x-secondary-button wire:click="save">Guardar cambios</x-secondary-button>
             @can('issue', $invoice)
-                <x-primary-button wire:click="issue"
-                                  wire:confirm="Al emitir se asignará numeración y se enviará a SUNAT. ¿Continuar?">
+                <x-primary-button @click="$store.confirm.open('Al emitir se asignará numeración correlativa y la factura se enviará a SUNAT.', () => $wire.issue(), { title: 'Emitir factura', confirmText: 'Sí, emitir' })">
                     Emitir factura
                 </x-primary-button>
             @endcan

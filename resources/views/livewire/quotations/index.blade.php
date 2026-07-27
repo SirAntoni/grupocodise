@@ -69,8 +69,7 @@
                                 @if ($quotation->isEditable())
                                     <a href="{{ route('cotizaciones.editar', $quotation) }}" wire:navigate class="font-medium text-brand-700 hover:text-brand-800 hover:underline">Editar</a>
                                     <button wire:click="accept({{ $quotation->id }})" class="text-green-700 hover:underline">Aceptar</button>
-                                    <button wire:click="reject({{ $quotation->id }})"
-                                            wire:confirm="¿Marcar la cotización como rechazada?"
+                                    <button @click="$store.confirm.open('¿Marcar la cotización {{ $quotation->code }} como rechazada?', () => $wire.reject({{ $quotation->id }}), { danger: true, confirmText: 'Sí, rechazar' })"
                                             class="text-red-600 hover:underline">Rechazar</button>
                                 @endif
                             @endcan

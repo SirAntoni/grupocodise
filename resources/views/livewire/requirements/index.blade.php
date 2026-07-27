@@ -76,8 +76,7 @@
                             @if ($requirement->isEditable())
                                 @can('requirements.manage')
                                     <a href="{{ route('requerimientos.editar', $requirement) }}" wire:navigate class="text-brand-600 hover:underline">Editar</a>
-                                    <button wire:click="annul({{ $requirement->id }})"
-                                            wire:confirm="¿Anular el requerimiento {{ $requirement->code }}?"
+                                    <button @click="$store.confirm.open('¿Anular el requerimiento {{ $requirement->code }}?', () => $wire.annul({{ $requirement->id }}), { danger: true, confirmText: 'Sí, anular' })"
                                             class="text-red-600 hover:underline">Anular</button>
                                 @endcan
                                 @can('guides.manage')

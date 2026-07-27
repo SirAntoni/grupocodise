@@ -58,8 +58,7 @@
                                 <button wire:click="toggleActive({{ $product->id }})" class="font-medium text-amber-600 hover:text-amber-700 hover:underline">
                                     {{ $product->is_active ? 'Desactivar' : 'Activar' }}
                                 </button>
-                                <button wire:click="delete({{ $product->id }})"
-                                        wire:confirm="¿Eliminar el producto {{ $product->code }}?"
+                                <button @click="$store.confirm.open('¿Eliminar el producto {{ $product->code }}? Esta acción no se puede deshacer.', () => $wire.delete({{ $product->id }}), { danger: true, confirmText: 'Sí, eliminar' })"
                                         class="font-medium text-red-600 hover:text-red-700 hover:underline">Eliminar</button>
                             @endcan
                         </td>

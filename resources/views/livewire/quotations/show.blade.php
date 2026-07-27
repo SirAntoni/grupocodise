@@ -6,7 +6,7 @@
                     <x-secondary-button>Editar</x-secondary-button>
                 </a>
                 <x-primary-button wire:click="accept">Marcar aceptada</x-primary-button>
-                <x-danger-button wire:click="reject" wire:confirm="¿Marcar la cotización como rechazada?">Rechazar</x-danger-button>
+                <x-danger-button @click="$store.confirm.open('¿Marcar la cotización como rechazada?', () => $wire.reject(), { danger: true, confirmText: 'Sí, rechazar' })">Rechazar</x-danger-button>
             @endif
         @endcan
         @can('purchase-orders.manage')
