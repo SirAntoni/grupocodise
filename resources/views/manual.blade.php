@@ -52,7 +52,7 @@
                 <section id="inicio" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <h2 class="text-lg font-bold text-slate-900">1 · Primeros pasos</h2>
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
-                        <li>Entra a <span class="font-mono text-brand-700">grupocodise.pe</span> con el correo y la contraseña que te entregó el administrador.</li>
+                        <li>Entra a <span class="font-mono text-brand-700">app.grupocodise.pe</span> con el correo y la contraseña que te entregó el administrador.</li>
                         <li>La primera vez, ve a tu avatar (arriba a la derecha) → <strong>Mi perfil</strong> y cambia tu contraseña.</li>
                         <li>El <strong>menú lateral</strong> muestra solo los módulos de tu rol: <em>proveedores</em> registra requerimientos, <em>logística</em> maneja productos, stock y guías, y <em>pagos</em> maneja cotizaciones, facturas y cobranzas.</li>
                         <li>En celular, abre el menú con el botón <strong>☰</strong> de la esquina superior izquierda.</li>
