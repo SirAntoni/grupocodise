@@ -30,10 +30,10 @@ class Form extends Component
     /** @var array<int, array{product_id: int|null, quantity: string|null}> */
     public array $items = [];
 
-    public function mount(?int $requirement = null): void
+    public function mount(?Requirement $requirement = null): void
     {
         if ($requirement) {
-            $this->requirement = Requirement::query()->with('items')->findOrFail($requirement);
+            $this->requirement = $requirement->load('items');
             $this->authorize('update', $this->requirement);
 
             $this->client_id = $this->requirement->client_id;

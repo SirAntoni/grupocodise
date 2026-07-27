@@ -24,12 +24,10 @@ class Form extends Component
 
     public ?string $remoteZoneAmount = null;
 
-    public function mount(?int $invoice = null): void
+    public function mount(?Invoice $invoice = null): void
     {
         if ($invoice) {
-            $this->invoice = Invoice::query()
-                ->with(['client', 'items.product', 'dispatchGuides'])
-                ->findOrFail($invoice);
+            $this->invoice = $invoice->load(['client', 'items.product', 'dispatchGuides']);
             $this->authorize('update', $this->invoice);
             $this->fillFromInvoice();
         } else {

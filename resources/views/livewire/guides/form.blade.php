@@ -1,11 +1,11 @@
 <x-page :title="'Guía de despacho — borrador'.($guide?->requirement ? ' · '.$guide->requirement->code : '')">
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-4">
-        <h3 class="font-semibold text-gray-800">Datos del traslado</h3>
-        <div class="grid md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
+        <h3 class="text-base font-semibold text-slate-900">Datos del traslado</h3>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
                 <x-input-label value="Cliente" />
                 <div class="mt-2 text-sm font-medium">{{ $guide->client->business_name }}</div>
-                <div class="text-xs text-gray-500 font-mono">{{ $guide->client->ruc }}</div>
+                <div class="text-xs text-slate-500 font-mono">{{ $guide->client->ruc }}</div>
             </div>
             <div>
                 <x-input-label value="Fecha de inicio de traslado" />
@@ -15,7 +15,7 @@
             <div>
                 <x-input-label value="Orden de compra (opcional)" />
                 <select wire:model="purchase_order_id"
-                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                     <option value="">— Sin OC —</option>
                     @foreach ($purchaseOrders as $po)
                         <option value="{{ $po->id }}">{{ $po->number }} ({{ $po->date->format('d/m/Y') }})</option>
@@ -26,7 +26,7 @@
             <div>
                 <x-input-label value="Motivo de traslado" />
                 <select wire:model="transfer_reason_code"
-                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                     @foreach ($transferReasons as $code => $label)
                         <option value="{{ $code }}">{{ $code }} — {{ $label }}</option>
                     @endforeach
@@ -66,13 +66,13 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-4">
-        <h3 class="font-semibold text-gray-800">Transporte</h3>
-        <div class="grid md:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
+        <h3 class="text-base font-semibold text-slate-900">Transporte</h3>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
                 <x-input-label value="Modalidad" />
                 <select wire:model.live="transport_mode"
-                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                     <option value="">Seleccione…</option>
                     <option value="publico">Transporte público (transportista)</option>
                     <option value="privado">Transporte privado (vehículo propio)</option>
@@ -110,7 +110,7 @@
                 <div>
                     <x-input-label value="Tipo de documento" />
                     <select wire:model="driver_document_type"
-                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                            class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                         <option value="1">DNI</option>
                         <option value="4">Carnet de extranjería</option>
                         <option value="7">Pasaporte</option>
@@ -131,14 +131,14 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-3">
-        <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-gray-800">Materiales</h3>
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-base font-semibold text-slate-900">Materiales</h3>
             <x-secondary-button wire:click="addItem">Agregar ítem</x-secondary-button>
         </div>
         <x-input-error :messages="$errors->get('items')" class="mt-1" />
 
-        <div class="hidden md:grid md:grid-cols-12 gap-3 text-xs font-medium text-gray-500 uppercase">
+        <div class="hidden md:grid md:grid-cols-12 gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
             <div class="col-span-6">Producto</div>
             <div class="col-span-2 text-right">Solicitada</div>
             <div class="col-span-2 text-right">Despachada</div>
@@ -147,10 +147,10 @@
 
         <div class="space-y-2">
             @foreach ($items as $index => $item)
-                <div class="grid md:grid-cols-12 gap-3 items-start" wire:key="gitem-{{ $item['key'] }}">
-                    <div class="md:col-span-6">
+                <div class="grid grid-cols-2 md:grid-cols-12 gap-3 items-start rounded-lg bg-slate-50 p-3 md:bg-transparent md:p-0" wire:key="gitem-{{ $item['key'] }}">
+                    <div class="col-span-2 md:col-span-6">
                         <select wire:model="items.{{ $index }}.product_id"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                class="block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                             <option value="">Producto…</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}">
@@ -161,33 +161,35 @@
                         <x-input-error :messages="$errors->get('items.'.$index.'.product_id')" class="mt-1" />
                     </div>
                     <div class="md:col-span-2">
+                        <span class="md:hidden block mb-1 text-xs font-medium text-slate-500">Solicitada</span>
                         <x-text-input type="number" step="0.01" min="0" class="block w-full text-right"
                                       wire:model="items.{{ $index }}.quantity_requested" />
                         <x-input-error :messages="$errors->get('items.'.$index.'.quantity_requested')" class="mt-1" />
                     </div>
                     <div class="md:col-span-2">
+                        <span class="md:hidden block mb-1 text-xs font-medium text-slate-500">Despachada</span>
                         <x-text-input type="number" step="0.01" min="0" class="block w-full text-right"
                                       wire:model="items.{{ $index }}.quantity_dispatched" />
                         <x-input-error :messages="$errors->get('items.'.$index.'.quantity_dispatched')" class="mt-1" />
                     </div>
-                    <div class="md:col-span-2 pt-2">
+                    <div class="col-span-2 md:col-span-2 md:pt-2">
                         <button type="button" wire:click="removeItem({{ $index }})"
-                                class="text-red-600 hover:underline text-sm">Quitar</button>
+                                class="text-sm font-medium text-red-600 hover:text-red-700 hover:underline">Quitar</button>
                     </div>
                 </div>
             @endforeach
         </div>
-        <p class="text-xs text-gray-500">La cantidad despachada es la que descuenta stock al emitir; puede diferir de la solicitada.</p>
+        <p class="text-xs text-slate-500">La cantidad despachada es la que descuenta stock al emitir; puede diferir de la solicitada.</p>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-6">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
         <x-input-label value="Observaciones" />
         <textarea wire:model="notes" rows="2"
-                  class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"></textarea>
+                  class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm"></textarea>
         <x-input-error :messages="$errors->get('notes')" class="mt-1" />
     </div>
 
-    <div class="flex justify-end gap-2">
+    <div class="flex flex-wrap justify-end gap-2">
         <a href="{{ route('guias.ver', ['dispatchGuide' => $guide->id]) }}" wire:navigate>
             <x-secondary-button>Cancelar</x-secondary-button>
         </a>

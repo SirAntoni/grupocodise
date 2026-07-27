@@ -13,11 +13,9 @@ class Show extends Component
 {
     public Requirement $requirement;
 
-    public function mount(int $requirement): void
+    public function mount(Requirement $requirement): void
     {
-        $this->requirement = Requirement::query()
-            ->with(['client', 'items.product', 'dispatchGuides.series', 'createdBy'])
-            ->findOrFail($requirement);
+        $this->requirement = $requirement->load(['client', 'items.product', 'dispatchGuides.series', 'createdBy']);
 
         $this->authorize('view', $this->requirement);
     }

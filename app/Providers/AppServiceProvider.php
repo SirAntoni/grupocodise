@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,10 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // El rol admin tiene acceso total sin enumerar permisos.
-        Gate::before(function (User $user, string $ability) {
-            return $user->hasRole('admin') ? true : null;
-        });
+        // El admin recibe TODOS los permisos vía seeder (no se usa Gate::before:
+        // un bypass global rompería las policies que dependen del estado del
+        // documento, p. ej. "solo se edita una factura en borrador").
 
         // Las acciones Livewire (POST /livewire/update) solo re-aplican los
         // middleware persistentes: sin esto, un usuario desactivado seguiría

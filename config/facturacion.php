@@ -11,9 +11,9 @@ return [
     */
 
     'company' => [
-        'ruc' => env('FACT_RUC', '20000000001'),
-        'razon_social' => env('FACT_RAZON_SOCIAL', 'EMPRESA DE DESPACHOS S.A.C.'),
-        'nombre_comercial' => env('FACT_NOMBRE_COMERCIAL', 'Ferretería Central'),
+        'ruc' => env('FACT_RUC', '20600896190'),
+        'razon_social' => env('FACT_RAZON_SOCIAL', 'GRUPO CODISE S.A.C.'),
+        'nombre_comercial' => env('FACT_NOMBRE_COMERCIAL', 'GRUPO CODISE'),
         'address' => [
             'direccion' => env('FACT_DIRECCION', 'AV. LOS INDUSTRIALES 123'),
             'ubigeo' => env('FACT_UBIGEO', '150101'),

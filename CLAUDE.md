@@ -79,7 +79,13 @@ Tres roles operativos: **proveedores** (registra pedidos/requerimientos), **logi
 - Componentes Livewire por módulo con tablas paginadas, búsqueda y filtros.
 - Tests de features críticos con Pest: descuento/restitución de stock, consolidación de guías en factura, cálculo del semáforo.
 
-## Desarrollo (estado: las 8 iteraciones implementadas)
+## Empresa emisora
+
+- **GRUPO CODISE S.A.C.** — RUC **20600896190** (datos en `config/facturacion.php` y `.env`).
+- En desarrollo, `FACT_RUC` usa el RUC del ambiente de pruebas GRE (20161515648); en producción cambiar a 20600896190.
+- Identidad visual: paleta `brand` (azul corporativo) + acento ámbar, tipografía Inter, layout con sidebar oscuro; componentes compartidos en `resources/views/components/`.
+
+## Desarrollo (estado: las 8 iteraciones implementadas + rediseño frontend)
 
 - URL local (Herd): https://ferreteria.test — MySQL 8 local, BD `ferreteria` (root sin contraseña).
 - Usuarios seed (contraseña `password`): admin@ferreteria.test, proveedores@…, logistica@…, pagos@… (dominio ferreteria.test).

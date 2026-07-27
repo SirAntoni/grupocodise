@@ -1,10 +1,10 @@
 <x-page :title="$quotation ? 'Editar cotización '.$quotation->code : 'Nueva cotización'">
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-4">
+    <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-4">
         <div class="grid md:grid-cols-3 gap-4">
             <div>
                 <x-input-label value="Cliente" />
                 <select wire:model="client_id"
-                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-lg shadow-sm text-sm">
                     <option value="">Seleccione…</option>
                     @foreach ($clients as $client)
                         <option value="{{ $client->id }}">{{ $client->business_name }}</option>
@@ -25,20 +25,20 @@
             <div class="md:col-span-3">
                 <x-input-label value="Observaciones" />
                 <textarea wire:model="notes" rows="2"
-                          class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"></textarea>
+                          class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm"></textarea>
                 <x-input-error :messages="$errors->get('notes')" class="mt-1" />
             </div>
         </div>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-3">
+    <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-6 space-y-3">
         <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-gray-800">Ítems</h3>
+            <h3 class="font-semibold text-slate-800">Ítems</h3>
             <x-secondary-button wire:click="addItem">Agregar ítem</x-secondary-button>
         </div>
         <x-input-error :messages="$errors->get('items')" class="mt-1" />
 
-        <div class="hidden md:grid md:grid-cols-12 gap-3 text-xs font-medium text-gray-500 uppercase">
+        <div class="hidden md:grid md:grid-cols-12 gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <div class="col-span-3">Producto (opcional)</div>
             <div class="col-span-3">Descripción</div>
             <div class="col-span-2">Unidad</div>
@@ -52,7 +52,7 @@
                 <div class="grid md:grid-cols-12 gap-3 items-start" wire:key="qitem-{{ $item['key'] }}">
                     <div class="md:col-span-3">
                         <select wire:model.live="items.{{ $index }}.product_id"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                class="block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-lg shadow-sm text-sm">
                             <option value="">— Libre —</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}">{{ $product->code }} — {{ $product->name }}</option>
@@ -65,7 +65,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <select wire:model="items.{{ $index }}.unit_code"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                class="block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-lg shadow-sm text-sm">
                             @foreach ($units as $unitCode => $label)
                                 <option value="{{ $unitCode }}">{{ $label }}</option>
                             @endforeach
@@ -88,10 +88,10 @@
                 </div>
             @endforeach
         </div>
-        <p class="text-xs text-gray-500">Los totales (subtotal, IGV 18 % y total) se calculan al guardar.</p>
+        <p class="text-xs text-slate-500">Los totales (subtotal, IGV 18 % y total) se calculan al guardar.</p>
     </div>
 
-    <div class="flex justify-end gap-2">
+    <div class="flex flex-wrap justify-end gap-2">
         <a href="{{ route('cotizaciones.index') }}" wire:navigate>
             <x-secondary-button>Cancelar</x-secondary-button>
         </a>

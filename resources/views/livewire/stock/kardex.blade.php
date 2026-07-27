@@ -6,11 +6,11 @@
         @endcan
     </x-slot>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-4 grid gap-3 md:grid-cols-4">
+    <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-4 grid gap-3 md:grid-cols-4">
         <div>
             <x-input-label value="Producto" />
             <select wire:model.live="productId"
-                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                    class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                 <option value="">Todos</option>
                 @foreach ($products as $product)
                     <option value="{{ $product->id }}">{{ $product->code }} — {{ $product->name }} (stock: {{ number_format((float) $product->stock, 2) }})</option>
@@ -20,7 +20,7 @@
         <div>
             <x-input-label value="Tipo de movimiento" />
             <select wire:model.live="typeFilter"
-                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                    class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                 <option value="">Todos</option>
                 @foreach ($types as $type)
                     <option value="{{ $type->value }}">{{ $type->label() }}</option>
@@ -37,9 +37,9 @@
         </div>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
+    <div class="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
                     <th class="px-4 py-3">Fecha</th>
                     <th class="px-4 py-3">Producto</th>
@@ -52,9 +52,9 @@
                     <th class="px-4 py-3">Observación</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-slate-100">
                 @forelse ($movements as $movement)
-                    <tr wire:key="mov-{{ $movement->id }}">
+                    <tr wire:key="mov-{{ $movement->id }}" class="transition hover:bg-slate-50/70">
                         <td class="px-4 py-3 whitespace-nowrap">{{ $movement->created_at->format('d/m/Y H:i') }}</td>
                         <td class="px-4 py-3">{{ $movement->product->code }} — {{ $movement->product->name }}</td>
                         <td class="px-4 py-3">{{ $movement->type->label() }}</td>
@@ -71,10 +71,15 @@
                             @endif
                         </td>
                         <td class="px-4 py-3">{{ $movement->user?->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-gray-500">{{ $movement->notes ?? '—' }}</td>
+                        <td class="px-4 py-3 text-slate-500">{{ $movement->notes ?? '—' }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">Sin movimientos que mostrar.</td></tr>
+                    <tr>
+                        <td colspan="9" class="px-4 py-12 text-center">
+                            <svg class="mx-auto h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                            <p class="mt-2 text-sm text-slate-400">Sin movimientos que mostrar.</p>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -84,16 +89,16 @@
 
     @if ($showMovementForm)
         <div class="fixed inset-0 z-50 flex items-center justify-center">
-            <div class="absolute inset-0 bg-gray-900/50" wire:click="$set('showMovementForm', false)"></div>
-            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4">
-                <h3 class="text-lg font-semibold text-gray-800">
+            <div class="absolute inset-0 bg-slate-900/50" wire:click="$set('showMovementForm', false)"></div>
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-semibold text-slate-800">
                     {{ $movementKind === 'entrada' ? 'Registrar entrada de stock' : 'Registrar ajuste de stock' }}
                 </h3>
 
                 <div>
                     <x-input-label value="Producto" />
                     <select wire:model="movementProductId"
-                            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                            class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                         <option value="">Seleccione…</option>
                         @foreach ($products as $product)
                             <option value="{{ $product->id }}">{{ $product->code }} — {{ $product->name }}</option>
@@ -106,7 +111,7 @@
                     <x-text-input type="number" step="0.01" class="mt-1 block w-full" wire:model="quantity" />
                     <x-input-error :messages="$errors->get('quantity')" class="mt-1" />
                     @if ($movementKind === 'ajuste')
-                        <p class="mt-1 text-xs text-gray-500">Usa cantidad negativa para disminuir el stock.</p>
+                        <p class="mt-1 text-xs text-slate-500">Usa cantidad negativa para disminuir el stock.</p>
                     @endif
                 </div>
                 <div>

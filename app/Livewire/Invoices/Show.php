@@ -19,15 +19,13 @@ class Show extends Component
 
     public string $annulment_reason = '';
 
-    public function mount(int $invoice): void
+    public function mount(Invoice $invoice): void
     {
-        $this->invoice = Invoice::query()
-            ->with([
-                'client', 'series', 'items.product', 'dispatchGuides.series',
-                'electronicDocument.logs', 'creditNotes.electronicDocument',
-                'receivable.payments', 'purchaseOrder', 'createdBy', 'issuedBy',
-            ])
-            ->findOrFail($invoice);
+        $this->invoice = $invoice->load([
+            'client', 'series', 'items.product', 'dispatchGuides.series',
+            'electronicDocument.logs', 'creditNotes.electronicDocument',
+            'receivable.payments', 'purchaseOrder', 'createdBy', 'issuedBy',
+        ]);
 
         $this->authorize('view', $this->invoice);
     }

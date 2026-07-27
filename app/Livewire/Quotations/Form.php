@@ -28,12 +28,12 @@ class Form extends Component
     /** @var array<int, array{product_id: int|null, description: string|null, unit_code: string, quantity: string|null, unit_value: string|null}> */
     public array $items = [];
 
-    public function mount(?int $quotation = null): void
+    public function mount(?Quotation $quotation = null): void
     {
         $this->authorize('quotations.manage');
 
         if ($quotation) {
-            $this->quotation = Quotation::query()->with('items')->findOrFail($quotation);
+            $this->quotation = $quotation->load('items');
 
             if (! $this->quotation->isEditable()) {
                 abort(403, 'Solo se puede editar una cotización en estado enviada.');

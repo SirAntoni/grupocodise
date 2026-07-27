@@ -13,13 +13,11 @@ class Show extends Component
 {
     public Quotation $quotation;
 
-    public function mount(int $quotation): void
+    public function mount(Quotation $quotation): void
     {
         $this->authorize('quotations.view');
 
-        $this->quotation = Quotation::query()
-            ->with(['client', 'items.product', 'purchaseOrder', 'createdBy', 'statusChangedBy'])
-            ->findOrFail($quotation);
+        $this->quotation = $quotation->load(['client', 'items.product', 'purchaseOrder', 'createdBy', 'statusChangedBy']);
     }
 
     public function accept(QuotationService $service): void

@@ -1,10 +1,10 @@
 <x-page :title="$requirement ? 'Editar requerimiento '.$requirement->code : 'Nuevo requerimiento'">
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-4">
         <div class="grid md:grid-cols-2 gap-4">
             <div>
                 <x-input-label value="Cliente" />
                 <select wire:model="client_id"
-                        class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                     <option value="">Seleccione…</option>
                     @foreach ($clients as $client)
                         <option value="{{ $client->id }}">{{ $client->business_name }}</option>
@@ -35,15 +35,15 @@
             <div class="md:col-span-2">
                 <x-input-label value="Observaciones" />
                 <textarea wire:model="notes" rows="2"
-                          class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"></textarea>
+                          class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm"></textarea>
                 <x-input-error :messages="$errors->get('notes')" class="mt-1" />
             </div>
         </div>
     </div>
 
-    <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-3">
-        <div class="flex items-center justify-between">
-            <h3 class="font-semibold text-gray-800">Materiales</h3>
+    <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="font-semibold text-slate-800">Materiales</h3>
             <x-secondary-button wire:click="addItem">Agregar ítem</x-secondary-button>
         </div>
         <x-input-error :messages="$errors->get('items')" class="mt-1" />
@@ -53,7 +53,7 @@
                 <div class="flex flex-wrap items-start gap-3" wire:key="item-{{ $item['key'] }}">
                     <div class="flex-1 min-w-64">
                         <select wire:model="items.{{ $index }}.product_id"
-                                class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                                class="block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
                             <option value="">Producto…</option>
                             @foreach ($products as $product)
                                 <option value="{{ $product->id }}">
