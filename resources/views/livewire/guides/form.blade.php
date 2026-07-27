@@ -83,7 +83,14 @@
             @if ($transport_mode === 'publico')
                 <div>
                     <x-input-label value="RUC del transportista" />
-                    <x-text-input type="text" maxlength="11" class="mt-1 block w-full" wire:model="carrier_ruc" />
+                    <div class="mt-1 flex gap-2">
+                        <x-text-input type="text" maxlength="11" class="block w-full" wire:model="carrier_ruc"
+                                      wire:keydown.enter="lookupCarrier" />
+                        <x-secondary-button wire:click="lookupCarrier" wire:loading.attr="disabled" wire:target="lookupCarrier" title="Buscar en el padrón SUNAT">
+                            <span wire:loading.remove wire:target="lookupCarrier">Buscar</span>
+                            <span wire:loading wire:target="lookupCarrier">…</span>
+                        </x-secondary-button>
+                    </div>
                     <x-input-error :messages="$errors->get('carrier_ruc')" class="mt-1" />
                 </div>
                 <div>
@@ -119,7 +126,14 @@
                 </div>
                 <div>
                     <x-input-label value="N° de documento del conductor" />
-                    <x-text-input type="text" maxlength="15" class="mt-1 block w-full" wire:model="driver_document" />
+                    <div class="mt-1 flex gap-2">
+                        <x-text-input type="text" maxlength="15" class="block w-full" wire:model="driver_document"
+                                      wire:keydown.enter="lookupDriver" />
+                        <x-secondary-button wire:click="lookupDriver" wire:loading.attr="disabled" wire:target="lookupDriver" title="Buscar nombres por DNI">
+                            <span wire:loading.remove wire:target="lookupDriver">Buscar</span>
+                            <span wire:loading wire:target="lookupDriver">…</span>
+                        </x-secondary-button>
+                    </div>
                     <x-input-error :messages="$errors->get('driver_document')" class="mt-1" />
                 </div>
                 <div>

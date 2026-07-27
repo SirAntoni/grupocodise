@@ -93,7 +93,8 @@ Tres roles operativos: **proveedores** (registra pedidos/requerimientos), **logi
 - Cola de emisión SUNAT: `php artisan queue:work` (o el scheduler la drena cada minuto); semáforo de cobranza: `php artisan cobranzas:actualizar-semaforo` (programado a diario).
 - Certificado de pruebas: `php artisan facturacion:certificado-prueba`. Ambiente beta ya probado: factura y NC aceptadas por el SEE beta de SUNAT; GRE aceptada por el API de pruebas (RUC 20161515648 + MODDATOS/MODDATOS + credenciales test del API GRE).
 - `FACT_DRIVER=fake` desactiva el envío real (lo usan los tests); producción: FACT_ENV=produccion, certificado real vía FACT_CERT_PATH, credenciales reales del API GRE, y sembrar series de producción (las beta se desactivan en Administración → Series).
-- Tests: `php artisan test` (Pest, SQLite en memoria; 44 tests).
+- Tests: `php artisan test` (Pest, SQLite en memoria).
+- **API Migo** (consulta RUC/DNI, `App\Services\MigoService`): autocompleta clientes por RUC (razón social, dirección, ubigeo, estado/condición del contribuyente) y, en la guía, transportista por RUC y conductor por DNI. Requiere `MIGO_TOKEN` en `.env` (token en https://api.migo.pe/tokens); sin token los botones "Buscar" avisan y todo se digita manual. **Padrón local**: la tabla `document_lookups` guarda SOLO las consultas exitosas — un documento válido consume crédito del API una sola vez y luego se sirve de la BD (se refresca a los 30 días; si Migo cae, se sirve el dato local aunque esté viejo). Errores y "no encontrado" no se guardan (el rate limit de 15/min frena reintentos). Un RUC que ya es cliente ni siquiera consulta el API.
 - Numeración: serie/número se asignan al Emitir (los borradores no consumen correlativo); los envíos a SUNAT son idempotentes (reintentos jamás renumeran).
 
 ## Plan de implementación progresiva

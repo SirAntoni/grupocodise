@@ -74,8 +74,26 @@
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <x-input-label value="RUC" />
-                        <x-text-input type="text" maxlength="11" class="mt-1 block w-full" wire:model="ruc" />
+                        <div class="mt-1 flex gap-2">
+                            <x-text-input type="text" maxlength="11" class="block w-full" wire:model="ruc"
+                                          wire:keydown.enter="lookupRuc" />
+                            <x-secondary-button wire:click="lookupRuc" wire:loading.attr="disabled" wire:target="lookupRuc" title="Buscar en el padrón SUNAT">
+                                <span wire:loading.remove wire:target="lookupRuc">Buscar</span>
+                                <span wire:loading wire:target="lookupRuc">…</span>
+                            </x-secondary-button>
+                        </div>
                         <x-input-error :messages="$errors->get('ruc')" class="mt-1" />
+                        @if ($rucInfo)
+                            <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium {{ $rucInfo['estado'] === 'ACTIVO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $rucInfo['estado'] ?? 'Estado desconocido' }}
+                                </span>
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium {{ $rucInfo['condicion'] === 'HABIDO' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                                    {{ $rucInfo['condicion'] ?? 'Condición desconocida' }}
+                                </span>
+                                <span class="text-slate-400">según padrón SUNAT</span>
+                            </div>
+                        @endif
                     </div>
                     <div>
                         <x-input-label value="Razón social" />
@@ -91,6 +109,11 @@
                         <x-input-label value="Distrito" />
                         <x-text-input type="text" class="mt-1 block w-full" wire:model="district" />
                         <x-input-error :messages="$errors->get('district')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-input-label value="Ubigeo (para la GRE)" />
+                        <x-text-input type="text" maxlength="6" class="mt-1 block w-full font-mono" placeholder="150101" wire:model="ubigeo" />
+                        <x-input-error :messages="$errors->get('ubigeo')" class="mt-1" />
                     </div>
                     <div>
                         <x-input-label value="Teléfono" />

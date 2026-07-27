@@ -155,6 +155,66 @@ class Form extends Component
         'items.*.quantity_dispatched' => 'cantidad despachada',
     ];
 
+    /** Autocompleta nombres y apellidos del conductor desde su DNI (API Migo). */
+    public function lookupDriver(\App\Services\MigoService $migo): void
+    {
+        $this->authorize('update', $this->guide);
+        $this->resetValidation('driver_document');
+
+        if ($this->driver_document_type !== '1' || ! preg_match('/^\d{8}$/', (string) $this->driver_document)) {
+            $this->addError('driver_document', 'La búsqueda requiere tipo DNI y 8 dígitos.');
+
+            return;
+        }
+
+        if (! $migo->isConfigured()) {
+            $this->addError('driver_document', 'La búsqueda automática no está disponible; digita los datos manualmente.');
+
+            return;
+        }
+
+        $info = $migo->lookupDni($this->driver_document);
+
+        if ($info === null) {
+            $this->addError('driver_document', 'No se encontró el DNI (o el servicio no respondió); digita los datos manualmente.');
+
+            return;
+        }
+
+        $this->driver_first_names = $info['nombres'];
+        $this->driver_last_names = $info['apellidos'];
+        session()->now('ok', "Conductor encontrado: {$info['nombre']}. Verifica la separación de nombres y apellidos.");
+    }
+
+    /** Autocompleta la razón social del transportista desde su RUC (API Migo). */
+    public function lookupCarrier(\App\Services\MigoService $migo): void
+    {
+        $this->authorize('update', $this->guide);
+        $this->resetValidation('carrier_ruc');
+
+        if (! preg_match('/^\d{11}$/', (string) $this->carrier_ruc)) {
+            $this->addError('carrier_ruc', 'Digita los 11 dígitos del RUC antes de buscar.');
+
+            return;
+        }
+
+        if (! $migo->isConfigured()) {
+            $this->addError('carrier_ruc', 'La búsqueda automática no está disponible; digita los datos manualmente.');
+
+            return;
+        }
+
+        $info = $migo->lookupRuc($this->carrier_ruc);
+
+        if ($info === null) {
+            $this->addError('carrier_ruc', 'No se encontró el RUC (o el servicio no respondió); digita los datos manualmente.');
+
+            return;
+        }
+
+        $this->carrier_name = $info['razon_social'];
+    }
+
     public function addItem(): void
     {
         $this->items[] = [

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Consulta de RUC (SUNAT) y DNI para autocompletar clientes,
+    // transportistas y conductores. Token: https://api.migo.pe/tokens
+    'migo' => [
+        'token' => env('MIGO_TOKEN'),
+        'base_url' => env('MIGO_BASE_URL', 'https://api.migo.pe/api/v2'),
+    ],
+
 ];

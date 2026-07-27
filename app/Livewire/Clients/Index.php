@@ -34,6 +34,11 @@ class Index extends Component
 
     public ?string $contact_name = null;
 
+    public ?string $ubigeo = null;
+
+    /** Estado/condición del contribuyente según el padrón (informativo). */
+    public ?array $rucInfo = null;
+
     protected function rules(): array
     {
         return [
@@ -41,6 +46,7 @@ class Index extends Component
             'ruc' => ['required', 'digits:11', Rule::unique('clients', 'ruc')->ignore($this->editingId)],
             'address' => ['required', 'string', 'max:255'],
             'district' => ['nullable', 'string', 'max:100'],
+            'ubigeo' => ['nullable', 'digits:6'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:255'],
             'contact_name' => ['nullable', 'string', 'max:255'],
@@ -65,7 +71,7 @@ class Index extends Component
     public function openCreate(): void
     {
         $this->authorize('clients.manage');
-        $this->reset(['editingId', 'business_name', 'ruc', 'address', 'district', 'phone', 'email', 'contact_name']);
+        $this->reset(['editingId', 'business_name', 'ruc', 'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name', 'rucInfo']);
         $this->resetValidation();
         $this->showForm = true;
     }
@@ -76,11 +82,58 @@ class Index extends Component
         $client = Client::query()->findOrFail($clientId);
 
         $this->editingId = $client->id;
+        $this->rucInfo = null;
         $this->fill($client->only([
-            'business_name', 'ruc', 'address', 'district', 'phone', 'email', 'contact_name',
+            'business_name', 'ruc', 'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name',
         ]));
         $this->resetValidation();
         $this->showForm = true;
+    }
+
+    /** Autocompleta los datos del cliente desde el padrón SUNAT (API Migo). */
+    public function lookupRuc(\App\Services\MigoService $migo): void
+    {
+        $this->authorize('clients.manage');
+        $this->resetValidation('ruc');
+        $this->rucInfo = null;
+
+        if (! preg_match('/^\d{11}$/', (string) $this->ruc)) {
+            $this->addError('ruc', 'Digita los 11 dígitos del RUC antes de buscar.');
+
+            return;
+        }
+
+        // Si ya es cliente, no hay nada que consultar (ni crédito que gastar).
+        $existing = Client::query()
+            ->where('ruc', $this->ruc)
+            ->when($this->editingId, fn ($q) => $q->whereKeyNot($this->editingId))
+            ->first();
+
+        if ($existing) {
+            $this->addError('ruc', "Este RUC ya está registrado como cliente: {$existing->business_name}.");
+
+            return;
+        }
+
+        if (! $migo->isConfigured()) {
+            $this->addError('ruc', 'La búsqueda automática no está disponible; digita los datos manualmente.');
+
+            return;
+        }
+
+        $info = $migo->lookupRuc($this->ruc);
+
+        if ($info === null) {
+            $this->addError('ruc', 'No se encontró el RUC en el padrón (o el servicio no respondió); digita los datos manualmente.');
+
+            return;
+        }
+
+        $this->business_name = $info['razon_social'];
+        $this->address = $info['direccion'] ?? $this->address;
+        $this->district = $info['distrito'] ?? $this->district;
+        $this->ubigeo = $info['ubigeo'] ?? $this->ubigeo;
+        $this->rucInfo = $info;
     }
 
     public function save(): void
