@@ -14,13 +14,55 @@ use App\Services\Facturacion\SunatResult;
 use App\Services\FacturacionElectronica;
 use App\Services\QuotationService;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 
 /**
- * Regresiones de límites del esquema. Estos casos solo fallan sobre MySQL:
- * SQLite ignora el largo de los varchar, los CHECK y el rango de los enteros,
- * y por eso dejó pasar a producción los errores 500 del 4 de agosto de 2026.
+ * Regresiones de desajustes entre el esquema y el código. Varios solo fallan
+ * sobre MySQL: SQLite ignora el largo de los varchar, los CHECK y el rango de
+ * los enteros, y por eso dejó pasar a producción los errores 500 del 4 de
+ * agosto de 2026.
  */
+
+it('todas las columnas de fecha tienen su cast en el modelo', function () {
+    $sinCast = [];
+
+    foreach (glob(app_path('Models/*.php')) as $archivo) {
+        $clase = 'App\\Models\\'.basename($archivo, '.php');
+
+        if (! class_exists($clase) || ! is_subclass_of($clase, Model::class)) {
+            continue;
+        }
+
+        $modelo = new $clase;
+        $tabla = $modelo->getTable();
+
+        if (! Schema::hasTable($tabla)) {
+            continue;
+        }
+
+        // Eloquent ya maneja estas tres por su cuenta.
+        $automaticas = array_filter([$modelo->getCreatedAtColumn(), $modelo->getUpdatedAtColumn(), 'deleted_at']);
+        $casts = $modelo->getCasts();
+
+        foreach (Schema::getColumns($tabla) as $columna) {
+            if (! in_array($columna['type_name'], ['date', 'datetime', 'timestamp'], true)) {
+                continue;
+            }
+
+            if (in_array($columna['name'], $automaticas, true) || array_key_exists($columna['name'], $casts)) {
+                continue;
+            }
+
+            // Sin cast, Eloquent devuelve un string y cualquier ->format() en la
+            // vista rompe la pantalla (pasó con quotations.status_changed_at).
+            $sinCast[] = $tabla.'.'.$columna['name'];
+        }
+    }
+
+    expect($sinCast)->toBe([]);
+});
 
 it('crea requerimientos sin desbordar la columna de código', function () {
     $this->seed(RolesAndPermissionsSeeder::class);

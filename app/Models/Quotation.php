@@ -24,6 +24,7 @@ class Quotation extends Model
             'status' => QuotationStatus::class,
             'issue_date' => 'date',
             'valid_until' => 'date',
+            'status_changed_at' => 'datetime',
             'taxable_amount' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',

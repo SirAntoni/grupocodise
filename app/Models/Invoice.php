@@ -26,6 +26,7 @@ class Invoice extends Model
             'status' => InvoiceStatus::class,
             'issue_date' => 'date',
             'due_date' => 'date',
+            'annulled_at' => 'datetime',
             'taxable_amount' => 'decimal:2',
             'igv' => 'decimal:2',
             'total' => 'decimal:2',
