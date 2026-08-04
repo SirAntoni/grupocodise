@@ -36,7 +36,10 @@ class Index extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingId)],
             'password' => [$this->editingId ? 'nullable' : 'required', Password::defaults()],
-            'role' => ['required', Rule::exists('roles', 'name')],
+            'role' => [
+                'required',
+                Rule::exists(config('permission.table_names.roles', 'roles'), 'name')->where('guard_name', 'web'),
+            ],
         ];
     }
 
@@ -97,6 +100,9 @@ class Index extends Component
             session()->now('ok', 'Usuario creado.');
         }
 
+        // Por diseño cada cuenta tiene un solo rol: el rol elegido reemplaza al
+        // anterior. Si algún día se necesitan varios, hay que cambiar también
+        // el formulario (hoy es un select simple).
         $user->syncRoles([$data['role']]);
         $this->showForm = false;
     }
@@ -126,9 +132,13 @@ class Index extends Component
             ->orderBy('name')
             ->paginate(15);
 
+        // Se ofrecen en el orden del catálogo (config/roles.php): primero los
+        // dos de uso diario, después los recortados.
+        $order = array_flip(array_keys(config('roles', [])));
+
         return view('livewire.users.index', [
             'users' => $users,
-            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'roles' => Role::query()->pluck('name')->sortBy(fn (string $name) => $order[$name] ?? 99)->values(),
         ]);
     }
 }

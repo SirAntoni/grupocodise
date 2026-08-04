@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('clientes', App\Livewire\Clients\Index::class)->name('clientes.index');
     });
 
-    // Productos y stock (logística)
+    // Productos y stock (operaciones)
     Route::middleware('permission:products.view')->group(function () {
         Route::get('productos', App\Livewire\Products\Index::class)->name('productos.index');
     });
@@ -27,7 +27,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('kardex', App\Livewire\Stock\Kardex::class)->name('kardex.index');
     });
 
-    // Requerimientos (proveedores)
+    // Requerimientos (operaciones)
     Route::middleware('permission:requirements.view')->group(function () {
         Route::get('requerimientos', App\Livewire\Requirements\Index::class)->name('requerimientos.index');
         Route::get('requerimientos/{requirement}', App\Livewire\Requirements\Show::class)
@@ -38,7 +38,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('requerimientos/{requirement}/editar', App\Livewire\Requirements\Form::class)->name('requerimientos.editar');
     });
 
-    // Guías de despacho (logística)
+    // Guías de despacho (operaciones)
     Route::middleware('permission:guides.view')->group(function () {
         Route::get('guias', App\Livewire\Guides\Index::class)->name('guias.index');
         Route::get('guias/{dispatchGuide}', App\Livewire\Guides\Show::class)
@@ -51,7 +51,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('guias/{dispatchGuide}/editar', App\Livewire\Guides\Form::class)->name('guias.editar');
     });
 
-    // Facturación (pagos)
+    // Facturación (operaciones)
     Route::middleware('permission:invoices.view')->group(function () {
         Route::get('facturas', App\Livewire\Invoices\Index::class)->name('facturas.index');
         Route::get('facturas/{invoice}', App\Livewire\Invoices\Show::class)
@@ -64,7 +64,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('facturas/{invoice}/editar', App\Livewire\Invoices\Form::class)->name('facturas.editar');
     });
 
-    // Cotizaciones (pagos)
+    // Cotizaciones (operaciones)
     Route::middleware('permission:quotations.view')->group(function () {
         Route::get('cotizaciones', App\Livewire\Quotations\Index::class)->name('cotizaciones.index');
         Route::get('cotizaciones/{quotation}', App\Livewire\Quotations\Show::class)
@@ -75,13 +75,13 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('cotizaciones/{quotation}/editar', App\Livewire\Quotations\Form::class)->name('cotizaciones.editar');
     });
 
-    // Órdenes de compra (pagos)
+    // Órdenes de compra (operaciones)
     Route::middleware('permission:purchase-orders.view')->group(function () {
         Route::get('ordenes-compra', App\Livewire\PurchaseOrders\Index::class)->name('ordenes-compra.index');
         Route::get('ordenes-compra/{purchaseOrder}/pdf', PurchaseOrderFileController::class)->name('ordenes-compra.pdf');
     });
 
-    // Cuentas por cobrar (pagos)
+    // Cuentas por cobrar (operaciones)
     Route::middleware('permission:receivables.view')->group(function () {
         Route::get('cobranzas', App\Livewire\Receivables\Index::class)->name('cobranzas.index');
         Route::get('pagos', App\Livewire\Payments\Index::class)->name('pagos.index');

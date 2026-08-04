@@ -48,4 +48,15 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+
+    /**
+     * Nombre legible del rol para mostrar en pantalla (config/roles.php).
+     */
+    public function roleLabel(): string
+    {
+        $labels = $this->getRoleNames()
+            ->map(fn (string $name) => config("roles.$name.label", ucfirst($name)));
+
+        return $labels->isEmpty() ? 'Sin rol' : $labels->implode(' · ');
+    }
 }

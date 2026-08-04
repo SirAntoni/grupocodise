@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
 
         $users = [
             ['name' => 'Administrador', 'email' => 'admin@ferreteria.test', 'role' => 'admin'],
+            ['name' => 'Usuario Operaciones', 'email' => 'operaciones@ferreteria.test', 'role' => 'operaciones'],
             ['name' => 'Usuario Proveedores', 'email' => 'proveedores@ferreteria.test', 'role' => 'proveedores'],
             ['name' => 'Usuario Logística', 'email' => 'logistica@ferreteria.test', 'role' => 'logistica'],
             ['name' => 'Usuario Pagos', 'email' => 'pagos@ferreteria.test', 'role' => 'pagos'],

@@ -27,7 +27,7 @@
                         <td class="px-4 py-3">{{ $user->email }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-brand-100 text-brand-800">
-                                {{ $user->getRoleNames()->first() ?? 'sin rol' }}
+                                {{ $user->roleLabel() }}
                             </span>
                         </td>
                         <td class="px-4 py-3">
@@ -87,9 +87,12 @@
                             class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-lg shadow-sm text-sm">
                         <option value="">Seleccione…</option>
                         @foreach ($roles as $roleName)
-                            <option value="{{ $roleName }}">{{ $roleName }}</option>
+                            <option value="{{ $roleName }}">{{ config("roles.$roleName.label", $roleName) }}</option>
                         @endforeach
                     </select>
+                    @if ($role && config("roles.$role.help"))
+                        <p class="mt-1 text-xs text-slate-500">{{ config("roles.$role.help") }}</p>
+                    @endif
                     <x-input-error :messages="$errors->get('role')" class="mt-1" />
                 </div>
 

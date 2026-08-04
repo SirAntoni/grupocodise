@@ -210,7 +210,7 @@ new class extends Component
                                 <span class="block text-sm font-semibold text-slate-800"
                                       x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name"
                                       x-on:profile-updated.window="name = $event.detail.name"></span>
-                                <span class="block text-xs text-slate-500">{{ auth()->user()->getRoleNames()->first() ?? 'usuario' }}</span>
+                                <span class="block text-xs text-slate-500">{{ auth()->user()->roleLabel() }}</span>
                             </span>
                             <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                         </button>
