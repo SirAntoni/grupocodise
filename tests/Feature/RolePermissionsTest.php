@@ -2,23 +2,30 @@
 
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 /**
- * El equipo trabaja el ciclo completo, así que el rol de uso diario es
- * "operaciones": todo menos la administración.
+ * Hay dos roles: "usuario" hace el trabajo diario y "admin" además lleva
+ * cobranzas, el resumen del panel y la administración (usuarios y series).
  */
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-it('el rol operaciones abarca todo el ciclo operativo menos la administración', function () {
-    $permisos = Role::findByName('operaciones')->permissions->pluck('name');
+it('solo existen los roles usuario y admin', function () {
+    expect(Role::query()->orderBy('name')->pluck('name')->all())->toBe(['admin', 'usuario']);
+});
 
-    expect($permisos)->toHaveCount(19)
+it('el rol usuario cubre el trabajo diario pero no cobranzas ni administración', function () {
+    $permisos = Role::findByName('usuario')->permissions->pluck('name');
+
+    expect($permisos)->toHaveCount(17)
         ->and($permisos)->not->toContain('users.manage')
-        ->and($permisos)->not->toContain('series.manage');
+        ->and($permisos)->not->toContain('series.manage')
+        ->and($permisos)->not->toContain('receivables.view')
+        ->and($permisos)->not->toContain('receivables.manage');
 
     foreach ([
         'clients.view', 'clients.manage',
@@ -29,16 +36,15 @@ it('el rol operaciones abarca todo el ciclo operativo menos la administración',
         'invoices.view', 'invoices.manage',
         'quotations.view', 'quotations.manage',
         'purchase-orders.view', 'purchase-orders.manage',
-        'receivables.view', 'receivables.manage',
         'reports.view',
     ] as $permiso) {
         expect($permisos)->toContain($permiso);
     }
 });
 
-it('operaciones entra a todos los módulos de trabajo', function () {
+it('el usuario entra a todos sus módulos de trabajo', function () {
     $user = User::factory()->create();
-    $user->assignRole('operaciones');
+    $user->assignRole('usuario');
     $this->actingAs($user);
 
     foreach ([
@@ -49,7 +55,6 @@ it('operaciones entra a todos los módulos de trabajo', function () {
         'cotizaciones.index', 'cotizaciones.crear',
         'ordenes-compra.index',
         'facturas.index', 'facturas.crear',
-        'cobranzas.index', 'pagos.index',
         'reportes.guias', 'reportes.diferencias',
         'dashboard', 'manual',
     ] as $ruta) {
@@ -57,43 +62,61 @@ it('operaciones entra a todos los módulos de trabajo', function () {
     }
 });
 
-it('operaciones no puede administrar usuarios ni series', function () {
+it('el usuario no ve cobranzas, el resumen del panel ni la administración', function () {
     $user = User::factory()->create();
-    $user->assignRole('operaciones');
+    $user->assignRole('usuario');
     $this->actingAs($user);
 
+    $this->get(route('cobranzas.index'))->assertForbidden();
+    $this->get(route('pagos.index'))->assertForbidden();
     $this->get(route('usuarios.index'))->assertForbidden();
     $this->get(route('series.index'))->assertForbidden();
+
+    // El resumen de cobranza del panel se apoya en el mismo permiso.
+    $this->get(route('dashboard'))->assertOk()->assertDontSee('Cobranza');
 });
 
-it('el comando migra los roles antiguos y no toca al administrador', function () {
+it('el administrador sí ve cobranzas y la administración', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $this->actingAs($admin);
+
+    foreach (['cobranzas.index', 'pagos.index', 'usuarios.index', 'series.index'] as $ruta) {
+        $this->get(route($ruta))->assertOk();
+    }
+});
+
+it('el comando normaliza los roles antiguos y no toca al administrador', function () {
+    // Cuenta con un rol de la etapa anterior del sistema.
+    Role::findOrCreate('logistica');
     $antiguo = User::factory()->create();
     $antiguo->assignRole('logistica');
 
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
-    $this->artisan('roles:migrar-operaciones')->assertSuccessful();
+    $this->artisan('roles:normalizar')->assertSuccessful();
 
-    expect($antiguo->fresh()->getRoleNames()->all())->toBe(['operaciones'])
-        ->and($admin->fresh()->getRoleNames()->all())->toBe(['admin']);
+    expect($antiguo->fresh()->getRoleNames()->all())->toBe(['usuario'])
+        ->and($admin->fresh()->getRoleNames()->all())->toBe(['admin'])
+        // El rol viejo queda eliminado al no tener a nadie.
+        ->and(Role::query()->where('name', 'logistica')->exists())->toBeFalse();
 
-    // Idempotente: una segunda corrida ya no encuentra a nadie.
-    $this->artisan('roles:migrar-operaciones')
+    $this->artisan('roles:normalizar')
         ->expectsOutputToContain('0 usuario(s) migrados')
         ->assertSuccessful();
 });
 
 it('el seeder es idempotente y no borra las asignaciones existentes', function () {
     $user = User::factory()->create();
-    $user->assignRole('operaciones');
+    $user->assignRole('usuario');
 
     $rolesAntes = Role::query()->count();
-    $permisosAntes = \Spatie\Permission\Models\Permission::query()->count();
+    $permisosAntes = Permission::query()->count();
 
     $this->seed(RolesAndPermissionsSeeder::class);
 
     expect(Role::query()->count())->toBe($rolesAntes)
-        ->and(\Spatie\Permission\Models\Permission::query()->count())->toBe($permisosAntes)
-        ->and($user->fresh()->hasRole('operaciones'))->toBeTrue();
+        ->and(Permission::query()->count())->toBe($permisosAntes)
+        ->and($user->fresh()->hasRole('usuario'))->toBeTrue();
 });

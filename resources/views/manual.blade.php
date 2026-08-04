@@ -54,7 +54,7 @@
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
                         <li>Entra a <span class="font-mono text-brand-700">app.grupocodise.pe</span> con el correo y la contraseña que te entregó el administrador.</li>
                         <li>La primera vez, ve a tu avatar (arriba a la derecha) → <strong>Mi perfil</strong> y cambia tu contraseña.</li>
-                        <li>El <strong>menú lateral</strong> muestra los módulos de tu rol. Con el rol <em>Operaciones</em> tienes el ciclo completo: requerimientos, guías, productos y stock, cotizaciones, órdenes de compra, facturas, cobranzas y reportes. Solo la administración (usuarios y series) queda reservada al administrador.</li>
+                        <li>El <strong>menú lateral</strong> muestra los módulos de tu rol. Con el rol <em>Usuario</em> tienes el trabajo diario: requerimientos, guías, productos y stock, clientes, cotizaciones, órdenes de compra, facturas y reportes. Las cobranzas y la administración (usuarios y series) son del <em>Administrador</em>.</li>
                         <li>En celular, abre el menú con el botón <strong>☰</strong> de la esquina superior izquierda.</li>
                     </ol>
                     <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -85,7 +85,7 @@
                 <section id="requerimientos" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">3 · Requerimientos (pedidos del cliente)</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <p class="mt-2 text-sm text-slate-600">El flujo empieza cuando el cliente envía su pedido por correo. Ese correo se registra aquí.</p>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Registrar un requerimiento</h3>
@@ -106,7 +106,7 @@
                 <section id="guias" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">4 · Guías de despacho</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Generar y emitir una guía</h3>
                     <ol class="mt-2 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
@@ -136,7 +136,7 @@
                 <section id="inventario" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">5 · Productos y kardex de stock</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
                         <li><strong>Productos → Nuevo producto</strong>: código, nombre y unidad de medida. El <em>stock inicial</em> opcional se registra como entrada en el kardex.</li>
@@ -151,7 +151,7 @@
                 <section id="clientes" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">6 · Clientes</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                         <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">admin</span>
                     </div>
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
@@ -167,7 +167,7 @@
                 <section id="cotizaciones" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">7 · Cotizaciones y órdenes de compra</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
                         <li><strong>Cotizaciones → Nueva cotización</strong>: cliente, vigencia e ítems con precio (sin IGV; los totales con IGV se calculan solos). Nace en estado <em>Enviada</em>.</li>
@@ -182,7 +182,7 @@
                 <section id="facturas" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">8 · Facturación electrónica</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Facturar una o varias guías</h3>
                     <ol class="mt-2 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
@@ -205,7 +205,7 @@
                 <section id="cobranzas" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">9 · Cobranzas y semáforo</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <p class="mt-2 text-sm text-slate-700">Cada factura aceptada genera automáticamente una <strong>cuenta por cobrar a 30 días</strong>.</p>
                     <div class="mt-4 grid gap-3 sm:grid-cols-3">
@@ -225,7 +225,7 @@
                 <section id="reportes" class="scroll-mt-24 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div class="flex flex-wrap items-center gap-2">
                         <h2 class="text-lg font-bold text-slate-900">10 · Reportes</h2>
-                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
+                        <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm leading-relaxed text-slate-700">
                         <li>• <strong>Guías por periodo</strong>: elige la empresa y el corte que necesites — <em>semanal</em> (lunes a domingo), <em>quincenal</em> (1–15 o 16–fin de mes), <em>mensual</em> o un <em>rango de fechas</em> cualquiera. Por defecto muestra emitidas; activa <em>Mostrar anuladas</em> si las necesitas. <strong>Exportar a Excel</strong> genera el archivo para enviar al cliente, con el periodo en el nombre.</li>
@@ -241,7 +241,7 @@
                         <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">admin</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm leading-relaxed text-slate-700">
-                        <li>• <strong>Usuarios</strong>: crea cada cuenta con su rol. Lo normal es <em>Operaciones</em> (todo el trabajo diario) o <em>Administrador</em> (además, usuarios y series); los roles limitados existen por si alguna vez necesitas dar acceso parcial. <strong>Desactivar</strong> corta el acceso de inmediato sin borrar su historial.</li>
+                        <li>• <strong>Usuarios</strong>: crea cada cuenta con su rol: <em>Usuario</em> para el trabajo diario o <em>Administrador</em> para quien además lleva cobranzas, series y usuarios. <strong>Desactivar</strong> corta el acceso de inmediato sin borrar su historial.</li>
                         <li>• <strong>Series de comprobantes</strong>: administra las series de guías (T…), facturas (F…) y notas de crédito. El correlativo avanza solo al emitir y nunca se edita. Para el pase a producción de SUNAT se registran series nuevas y se desactivan las de prueba.</li>
                         <li>• No hay registro público de cuentas: todos los usuarios se crean desde aquí.</li>
                     </ul>

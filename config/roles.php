@@ -12,24 +12,12 @@
 */
 
 return [
-    'operaciones' => [
-        'label' => 'Operaciones',
-        'help' => 'Todo el ciclo del negocio: requerimientos, guías, productos, stock, cotizaciones, órdenes de compra, facturas, cobranzas y reportes.',
+    'usuario' => [
+        'label' => 'Usuario',
+        'help' => 'Todo el trabajo diario: requerimientos, guías, productos y stock, clientes, cotizaciones, órdenes de compra, facturas y reportes. No ve cobranzas ni el resumen del panel.',
     ],
     'admin' => [
         'label' => 'Administrador',
-        'help' => 'Todo lo de Operaciones más la administración: usuarios y series de numeración.',
-    ],
-    'logistica' => [
-        'label' => 'Logística (acceso limitado)',
-        'help' => 'Solo productos, stock, guías y reportes.',
-    ],
-    'pagos' => [
-        'label' => 'Pagos (acceso limitado)',
-        'help' => 'Solo cotizaciones, órdenes de compra, facturas, cobranzas y reportes.',
-    ],
-    'proveedores' => [
-        'label' => 'Requerimientos (acceso limitado)',
-        'help' => 'Solo clientes y requerimientos.',
+        'help' => 'Todo lo anterior más cobranzas, el resumen del panel y la administración: usuarios y series de numeración.',
     ],
 ];

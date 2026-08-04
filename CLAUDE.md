@@ -19,7 +19,7 @@ Empresa peruana que despacha materiales a clientes empresa.
 
 Flujo principal: el cliente envía un requerimiento por correo → se registra en el sistema → logística genera la guía de despacho (2 copias PDF: una la firma el cliente, otra queda con la empresa) → la guía se emite electrónicamente ante SUNAT (GRE) → pagos factura una o varias guías consolidadas → la factura genera una cuenta por cobrar a 30 días → se registran pagos y se controla la cobranza con un semáforo.
 
-Tres roles operativos: **proveedores** (registra pedidos/requerimientos), **logistica** (guías, stock, productos), **pagos** (facturas, OC, cobranzas). Más un rol **admin** con acceso total.
+Dos roles (definidos así por el cliente el 2026-08-04, tras verificar cómo trabaja su equipo: los tres operativos hacen exactamente lo mismo): **usuario** — todo el trabajo diario (requerimientos, guías, productos/stock, clientes, cotizaciones, OC, facturas y reportes) — y **admin**, que además ve cobranzas, el resumen del panel y la administración (usuarios y series). La spec original preveía proveedores/logistica/pagos; esos roles se retiraron con `php artisan roles:normalizar`.
 
 ## Módulos del sistema (alcance completo)
 
@@ -88,7 +88,7 @@ Tres roles operativos: **proveedores** (registra pedidos/requerimientos), **logi
 ## Desarrollo (estado: las 8 iteraciones implementadas + rediseño frontend)
 
 - URL local (Herd): https://ferreteria.test — MySQL 8 local, BD `ferreteria` (root sin contraseña).
-- Usuarios seed (contraseña `password`): admin@ferreteria.test, proveedores@…, logistica@…, pagos@… (dominio ferreteria.test).
+- Usuarios seed (contraseña `password`): admin@ferreteria.test y usuario@ferreteria.test.
 - `php artisan migrate:fresh --seed` regenera todo (roles, usuarios, series beta T001/F001/FC01, clientes y productos demo).
 - Cola de emisión SUNAT: `php artisan queue:work` (o el scheduler la drena cada minuto); semáforo de cobranza: `php artisan cobranzas:actualizar-semaforo` (programado a diario).
 - Certificado de pruebas: `php artisan facturacion:certificado-prueba`. Ambiente beta ya probado: factura y NC aceptadas por el SEE beta de SUNAT; GRE aceptada por el API de pruebas (RUC 20161515648 + MODDATOS/MODDATOS + credenciales test del API GRE).

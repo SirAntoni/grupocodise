@@ -13,6 +13,29 @@
             @can('receivables.view')
                 <livewire:dashboard.collection-summary />
             @endcan
+
+            @php
+                $accesos = collect([
+                    ['permiso' => 'requirements.view', 'ruta' => 'requerimientos.index', 'titulo' => 'Requerimientos', 'detalle' => 'Pedidos que llegan del cliente'],
+                    ['permiso' => 'guides.view', 'ruta' => 'guias.index', 'titulo' => 'Guías de despacho', 'detalle' => 'Emitir, imprimir y anular'],
+                    ['permiso' => 'products.view', 'ruta' => 'productos.index', 'titulo' => 'Productos y stock', 'detalle' => 'Inventario y kardex'],
+                    ['permiso' => 'invoices.view', 'ruta' => 'facturas.index', 'titulo' => 'Facturas', 'detalle' => 'Consolidar guías y facturar'],
+                    ['permiso' => 'quotations.view', 'ruta' => 'cotizaciones.index', 'titulo' => 'Cotizaciones', 'detalle' => 'Propuestas y órdenes de compra'],
+                    ['permiso' => 'reports.view', 'ruta' => 'reportes.guias', 'titulo' => 'Reportes', 'detalle' => 'Guías por semana, quincena o mes'],
+                ])->filter(fn ($acceso) => auth()->user()->can($acceso['permiso']));
+            @endphp
+
+            @if ($accesos->isNotEmpty())
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($accesos as $acceso)
+                        <a href="{{ route($acceso['ruta']) }}" wire:navigate
+                           class="group rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md hover:ring-brand-300">
+                            <p class="font-semibold text-slate-900 group-hover:text-brand-700">{{ $acceso['titulo'] }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ $acceso['detalle'] }}</p>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

@@ -99,7 +99,7 @@ it('exporta a Excel en los cuatro periodos y mantiene los enlaces antiguos', fun
     seedSeries();
 
     $user = User::factory()->create();
-    $user->assignRole('operaciones');
+    $user->assignRole('usuario');
     $this->actingAs($user);
 
     // Enlace antiguo, sin periodo: sigue respondiendo como quincenal.

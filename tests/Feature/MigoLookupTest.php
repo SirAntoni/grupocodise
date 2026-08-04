@@ -86,7 +86,7 @@ it('bloquea los lookups de la guía cuando el permiso fue revocado', function ()
     $this->seed(RolesAndPermissionsSeeder::class);
     seedSeries();
     $user = testUser();
-    $user->assignRole('logistica');
+    $user->assignRole('usuario');
 
     $client = Client::factory()->create();
     $product = Product::factory()->create(['stock' => 10]);
@@ -94,7 +94,7 @@ it('bloquea los lookups de la guía cuando el permiso fue revocado', function ()
 
     $component = Livewire::actingAs($user)->test(GuidesForm::class, ['dispatchGuide' => $guide->id]);
 
-    $user->removeRole('logistica');
+    $user->removeRole('usuario');
     app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
     $component->call('lookupDriver')->assertForbidden();
@@ -134,7 +134,7 @@ it('autocompleta conductor y transportista en el formulario de guía', function 
     $this->seed(RolesAndPermissionsSeeder::class);
     seedSeries();
     $user = testUser();
-    $user->assignRole('logistica');
+    $user->assignRole('usuario');
 
     $client = Client::factory()->create();
     Product::factory()->create(['stock' => 10]);
