@@ -64,7 +64,9 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
         if (! $result->isSuccess()) {
             $error = $result->getError();
 
-            return SunatResult::error($error?->getCode(), $error?->getMessage(), $xml);
+            return $this->isDefinitiveRejection($error?->getCode())
+                ? SunatResult::rejected($error?->getCode(), $error?->getMessage(), $xml)
+                : SunatResult::error($error?->getCode(), $error?->getMessage(), $xml);
         }
 
         $ticket = method_exists($result, 'getTicket') ? $result->getTicket() : null;
@@ -84,7 +86,11 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
         if (! $result->isSuccess()) {
             $error = $result->getError();
 
-            return SunatResult::error($error?->getCode(), $error?->getMessage());
+            // Un rechazo por contenido no se arregla reintentando: hay que
+            // corregir la guía y volver a enviarla desde cero (ticket nuevo).
+            return $this->isDefinitiveRejection($error?->getCode())
+                ? SunatResult::rejected($error?->getCode(), $error?->getMessage())
+                : SunatResult::error($error?->getCode(), $error?->getMessage());
         }
 
         $cdr = $result->getCdrResponse();
@@ -105,6 +111,23 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
     }
 
     /* ----------------------------------------------------------------- */
+
+    /**
+     * SUNAT clasifica sus códigos por rango: del 100 al 999 son fallas del
+     * servicio (vale la pena reintentar), del 1000 al 3999 rechazan el
+     * comprobante (hay que corregirlo), y de 4000 en adelante son
+     * observaciones sobre un documento aceptado.
+     */
+    protected function isDefinitiveRejection(?string $code): bool
+    {
+        if ($code === null || ! preg_match('/\d/', $code)) {
+            return false;
+        }
+
+        $number = (int) preg_replace('/\D/', '', $code);
+
+        return $number >= 1000 && $number < 4000;
+    }
 
     protected function makeSee(): See
     {

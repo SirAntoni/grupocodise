@@ -46,6 +46,20 @@ it('en transporte público envía la fecha de entrega de bienes al transportista
         ->and($envio->getTransportista()->getNumDoc())->toBe('20616044037');
 });
 
+it('distingue el rechazo definitivo de la falla pasajera de SUNAT', function () {
+    $servicio = new GreenterFacturacionElectronica;
+    $metodo = new ReflectionMethod($servicio, 'isDefinitiveRejection');
+
+    // Rechazo de contenido: reintentar no sirve, hay que corregir y reenviar.
+    expect($metodo->invoke($servicio, '3617'))->toBeTrue()
+        ->and($metodo->invoke($servicio, '2027'))->toBeTrue()
+        // Fallas del servicio y observaciones: no son rechazo definitivo.
+        ->and($metodo->invoke($servicio, '0100'))->toBeFalse()
+        ->and($metodo->invoke($servicio, '4000'))->toBeFalse()
+        ->and($metodo->invoke($servicio, null))->toBeFalse()
+        ->and($metodo->invoke($servicio, 'soap-env:Server'))->toBeFalse();
+});
+
 it('en transporte privado manda el vehículo y el chofer, no el transportista', function () {
     $despatch = despatchDe(TransportMode::Private->value);
     $envio = $despatch->getEnvio();
