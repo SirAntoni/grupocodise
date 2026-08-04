@@ -57,6 +57,15 @@ class DispatchGuide extends Model
         return $this->hasMany(DispatchGuideItem::class);
     }
 
+    /**
+     * Ítems que realmente salieron del almacén. Un ítem solicitado pero no
+     * despachado (cantidad 0) no mueve stock ni viaja a SUNAT.
+     */
+    public function dispatchedItems(): HasMany
+    {
+        return $this->items()->where('quantity_dispatched', '>', 0);
+    }
+
     public function invoices(): BelongsToMany
     {
         return $this->belongsToMany(Invoice::class)->withTimestamps();

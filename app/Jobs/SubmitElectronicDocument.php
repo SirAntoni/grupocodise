@@ -91,10 +91,16 @@ class SubmitElectronicDocument implements ShouldQueue, ShouldBeUnique
 
         $this->persistArtifacts($result, $documentable->full_number);
 
+        // El código que devuelve SUNAT no siempre es el "0160" de manual: ante
+        // un fault genérico, Greenter arma el código concatenando los dígitos
+        // del mensaje y sale mucho más largo que la columna. Se recorta para
+        // guardarlo; el motivo íntegro queda en el mensaje, que es TEXT.
+        $code = $result->code === null ? null : mb_substr($result->code, 0, 20);
+
         $this->document->logs()->create([
             'action' => $this->document->ticket && $documentable instanceof DispatchGuide ? 'consultar_ticket' : 'enviar',
             'success' => $result->success && ($result->accepted || $result->inProgress),
-            'response_code' => $result->code,
+            'response_code' => $code,
             'response_message' => $result->message,
         ]);
 
@@ -116,7 +122,7 @@ class SubmitElectronicDocument implements ShouldQueue, ShouldBeUnique
             // Falla de comunicación/servicio: dejar en error y reintentar.
             $this->document->update([
                 'sunat_status' => SunatStatus::Error,
-                'error_code' => $result->code,
+                'error_code' => $code,
                 'error_message' => $result->message,
             ]);
 
@@ -147,7 +153,7 @@ class SubmitElectronicDocument implements ShouldQueue, ShouldBeUnique
         // Rechazado por SUNAT: persistir motivo para corregir y reenviar.
         $this->document->update([
             'sunat_status' => SunatStatus::Rejected,
-            'error_code' => $result->code,
+            'error_code' => $code,
             'error_message' => $result->message,
             'sent_at' => $this->document->sent_at ?? now(),
         ]);

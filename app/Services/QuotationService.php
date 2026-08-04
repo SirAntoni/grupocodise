@@ -34,7 +34,7 @@ class QuotationService
                 // Código derivado del id: sin carreras contra el unique.
                 $quotation = Quotation::query()->create([
                     ...$data,
-                    'code' => 'TMP-'.\Illuminate\Support\Str::uuid(),
+                    'code' => Quotation::temporaryCode(),
                     'status' => QuotationStatus::Sent,
                     'created_by' => $user->id,
                 ]);

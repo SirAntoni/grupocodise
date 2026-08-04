@@ -117,7 +117,7 @@ class CreditNoteService
             $creditNote->update(['status' => CreditNoteStatus::PendingSubmission]);
         }
 
-        $document->update(['sunat_status' => SunatStatus::Pending]);
+        $document->update(['sunat_status' => SunatStatus::Pending, 'attempts' => 0]);
         $document->logs()->create([
             'action' => 'enviar',
             'success' => true,

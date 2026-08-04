@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\RequirementStatus;
+use App\Models\Concerns\GeneratesSequentialCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Requirement extends Model
 {
-    use HasFactory, SoftDeletes;
+    use GeneratesSequentialCode, HasFactory, SoftDeletes;
 
     protected $guarded = [];
 

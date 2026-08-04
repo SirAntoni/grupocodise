@@ -158,6 +158,8 @@ class DispatchGuideService
             'sunat_status' => \App\Enums\SunatStatus::Pending,
             // Un rechazo invalida el ticket anterior: se reenvía desde cero.
             'ticket' => $document->sunat_status === \App\Enums\SunatStatus::Rejected ? null : $document->ticket,
+            // El contador cuenta los intentos de este reenvío, no los históricos.
+            'attempts' => 0,
         ]);
         $document->logs()->create([
             'action' => 'enviar',

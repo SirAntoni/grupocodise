@@ -224,7 +224,7 @@ class InvoiceService
             $invoice->update(['status' => InvoiceStatus::PendingSubmission]);
         }
 
-        $document->update(['sunat_status' => SunatStatus::Pending]);
+        $document->update(['sunat_status' => SunatStatus::Pending, 'attempts' => 0]);
         $document->logs()->create([
             'action' => 'enviar',
             'success' => true,

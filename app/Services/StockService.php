@@ -44,7 +44,9 @@ class StockService
      */
     public function dispatchGuideItems(DispatchGuide $guide, ?User $user = null): void
     {
-        foreach ($guide->items()->with('product')->get() as $item) {
+        // Los ítems que no se despacharon (cantidad 0) no mueven stock: no salió
+        // nada del almacén, así que no generan movimiento de kardex.
+        foreach ($guide->dispatchedItems()->with('product')->get() as $item) {
             $this->apply(
                 $item->product,
                 StockMovementType::DispatchExit,
@@ -61,7 +63,8 @@ class StockService
      */
     public function restituteGuideItems(DispatchGuide $guide, ?User $user = null): void
     {
-        foreach ($guide->items()->with('product')->get() as $item) {
+        // Solo se restituye lo que efectivamente se descontó al emitir.
+        foreach ($guide->dispatchedItems()->with('product')->get() as $item) {
             $this->apply(
                 $item->product,
                 StockMovementType::AnnulmentRestitution,

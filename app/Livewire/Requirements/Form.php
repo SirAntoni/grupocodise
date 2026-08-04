@@ -115,7 +115,7 @@ class Form extends Component
                 // El código se deriva del id autoincremental: dos guardados
                 // concurrentes jamás chocan en el unique de `code`.
                 $this->requirement = Requirement::query()->create([
-                    'code' => 'TMP-'.\Illuminate\Support\Str::uuid(),
+                    'code' => Requirement::temporaryCode(),
                     'client_id' => $data['client_id'],
                     'crew_chief' => $data['crew_chief'],
                     'district' => $data['district'],
