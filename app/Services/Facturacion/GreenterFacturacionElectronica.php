@@ -352,6 +352,11 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
                 ->setTipoDoc('6')
                 ->setNumDoc($guide->carrier_ruc)
                 ->setRznSocial($guide->carrier_name));
+
+            // En transporte público SUNAT exige la fecha de entrega de bienes al
+            // transportista; la mercadería se entrega el día que arranca el
+            // traslado, así que se toma esa misma fecha.
+            $shipment->setFecEntregaBienes($guide->transfer_date->toDateTime());
         } else {
             $shipment
                 ->setVehiculo((new Vehicle)->setPlaca(str_replace('-', '', (string) $guide->vehicle_plate)))
