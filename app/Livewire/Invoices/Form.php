@@ -3,7 +3,9 @@
 namespace App\Livewire\Invoices;
 
 use App\Enums\InvoiceItemType;
+use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\User;
 use App\Services\InvoiceService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -14,8 +16,16 @@ class Form extends Component
 {
     public ?Invoice $invoice = null;
 
-    /** Número de guía a agregar (modo creación y edición). */
-    public string $guideNumber = '';
+    /** Empresa a facturar (solo al crear: después la fija el borrador). */
+    public ?int $clientId = null;
+
+    /** Filtro por número dentro de la lista de guías disponibles. */
+    public string $guideSearch = '';
+
+    /** @var array<int, int> ids de las guías marcadas */
+    public array $selectedGuides = [];
+
+    public ?int $sellerId = null;
 
     /** @var array<int, string> precios editables por invoice_item_id */
     public array $prices = [];
@@ -29,10 +39,20 @@ class Form extends Component
         if ($invoice) {
             $this->invoice = $invoice->load(['client', 'items.product', 'dispatchGuides']);
             $this->authorize('update', $this->invoice);
+            $this->clientId = $this->invoice->client_id;
+            $this->sellerId = $this->invoice->seller_id;
             $this->fillFromInvoice();
         } else {
             $this->authorize('create', Invoice::class);
+            $this->sellerId = auth()->id();
         }
+    }
+
+    /** Cambiar de empresa vacía lo marcado: las guías son de otro cliente. */
+    public function updatedClientId(): void
+    {
+        $this->selectedGuides = [];
+        $this->guideSearch = '';
     }
 
     protected function fillFromInvoice(): void
@@ -47,43 +67,59 @@ class Form extends Component
         $remoteZone = $this->invoice->items->firstWhere('type', InvoiceItemType::RemoteZone);
         $this->hasRemoteZone = $remoteZone !== null;
         $this->remoteZoneAmount = $remoteZone ? (string) round((float) $remoteZone->subtotal, 2) : null;
+        $this->selectedGuides = [];
     }
 
-    /** Crea el borrador con la primera guía digitada. */
+    /** Crea el borrador con las guías marcadas. */
     public function createDraft(InvoiceService $service): void
     {
         $this->authorize('create', Invoice::class);
-        $this->validate(['guideNumber' => ['required', 'string']], [], ['guideNumber' => 'número de guía']);
+        $this->validate([
+            'clientId' => ['required', 'exists:clients,id'],
+            'selectedGuides' => ['required', 'array', 'min:1'],
+            'sellerId' => ['nullable', 'exists:users,id'],
+        ], [
+            'selectedGuides.required' => 'Marca al menos una guía para facturar.',
+            'selectedGuides.min' => 'Marca al menos una guía para facturar.',
+        ], ['clientId' => 'empresa']);
 
         try {
-            $invoice = $service->createDraftFromGuideNumbers([$this->guideNumber], auth()->user());
+            $invoice = $service->createDraftFromGuideIds($this->selectedGuides, auth()->user());
         } catch (\InvalidArgumentException $e) {
-            $this->addError('guideNumber', $e->getMessage());
+            $this->addError('selectedGuides', $e->getMessage());
 
             return;
         }
 
-        session()->flash('ok', 'Borrador de factura creado; agrega más guías y digita los precios.');
+        if ($this->sellerId) {
+            $invoice->update(['seller_id' => $this->sellerId]);
+        }
+
+        session()->flash('ok', 'Borrador de factura creado; digita los precios y emite cuando esté listo.');
         $this->redirectRoute('facturas.editar', ['invoice' => $invoice->id], navigate: true);
     }
 
-    public function addGuide(InvoiceService $service): void
+    public function addSelectedGuides(InvoiceService $service): void
     {
         $this->authorize('update', $this->invoice);
-        $this->validate(['guideNumber' => ['required', 'string']], [], ['guideNumber' => 'número de guía']);
+        $this->validate([
+            'selectedGuides' => ['required', 'array', 'min:1'],
+        ], [
+            'selectedGuides.required' => 'Marca al menos una guía para agregar.',
+            'selectedGuides.min' => 'Marca al menos una guía para agregar.',
+        ]);
 
         try {
             $this->savePricing($service);
-            $service->addGuide($this->invoice, $this->guideNumber);
+            $service->addGuideIds($this->invoice, $this->selectedGuides);
         } catch (\InvalidArgumentException $e) {
-            $this->addError('guideNumber', $e->getMessage());
+            $this->addError('selectedGuides', $e->getMessage());
 
             return;
         }
 
-        $this->guideNumber = '';
         $this->fillFromInvoice();
-        session()->now('ok', 'Guía agregada y consolidada.');
+        session()->now('ok', 'Guías agregadas y consolidadas.');
     }
 
     public function removeGuide(int $guideId, InvoiceService $service): void
@@ -111,6 +147,7 @@ class Form extends Component
 
         try {
             $this->savePricing($service);
+            $this->saveSeller();
         } catch (\InvalidArgumentException $e) {
             session()->now('error', $e->getMessage());
 
@@ -118,7 +155,7 @@ class Form extends Component
         }
 
         $this->fillFromInvoice();
-        session()->now('ok', 'Precios y totales actualizados.');
+        session()->now('ok', 'Factura actualizada.');
     }
 
     public function issue(InvoiceService $service): void
@@ -127,6 +164,7 @@ class Form extends Component
 
         try {
             $this->savePricing($service);
+            $this->saveSeller();
             $service->issue($this->invoice, auth()->user());
         } catch (\InvalidArgumentException $e) {
             session()->now('error', $e->getMessage());
@@ -137,6 +175,15 @@ class Form extends Component
 
         session()->flash('ok', "Factura {$this->invoice->fresh()->full_number} emitida y en cola de envío a SUNAT.");
         $this->redirectRoute('facturas.ver', ['invoice' => $this->invoice->id], navigate: true);
+    }
+
+    protected function saveSeller(): void
+    {
+        $this->validate(['sellerId' => ['nullable', 'exists:users,id']], [], ['sellerId' => 'vendedor']);
+
+        if ($this->invoice->seller_id !== $this->sellerId) {
+            $this->invoice->update(['seller_id' => $this->sellerId]);
+        }
     }
 
     protected function savePricing(InvoiceService $service): void
@@ -161,8 +208,14 @@ class Form extends Component
         );
     }
 
-    public function render(): View
+    public function render(InvoiceService $service): View
     {
-        return view('livewire.invoices.form');
+        $clientId = $this->invoice?->client_id ?? $this->clientId;
+
+        return view('livewire.invoices.form', [
+            'clients' => Client::query()->where('is_active', true)->orderBy('business_name')->get(['id', 'business_name', 'ruc']),
+            'sellers' => User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'availableGuides' => $clientId ? $service->availableGuidesFor($clientId, trim($this->guideSearch)) : collect(),
+        ]);
     }
 }

@@ -20,6 +20,9 @@
             <a href="{{ route('guias.pdf', ['dispatchGuide' => $guide->id]) }}" target="_blank">
                 <x-primary-button>PDF 2 copias</x-primary-button>
             </a>
+            <a href="{{ route('guias.pdf', ['dispatchGuide' => $guide->id, 'descargar' => 1]) }}">
+                <x-secondary-button>Descargar</x-secondary-button>
+            </a>
             @can('resend', $guide)
                 <x-secondary-button wire:click="resend">Reenviar a SUNAT</x-secondary-button>
             @endcan

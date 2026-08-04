@@ -25,6 +25,8 @@ class Form extends Component
 
     public ?string $notes = null;
 
+    public ?int $seller_id = null;
+
     /** @var array<int, array{product_id: int|null, description: string|null, unit_code: string, quantity: string|null, unit_value: string|null}> */
     public array $items = [];
 
@@ -43,6 +45,7 @@ class Form extends Component
             $this->issue_date = $this->quotation->issue_date->format('Y-m-d');
             $this->valid_until = $this->quotation->valid_until->format('Y-m-d');
             $this->notes = $this->quotation->notes;
+            $this->seller_id = $this->quotation->seller_id;
             $this->items = $this->quotation->items->map(fn ($item) => [
                 'key' => (string) \Illuminate\Support\Str::uuid(),
                 'product_id' => $item->product_id,
@@ -55,6 +58,7 @@ class Form extends Component
             $this->issue_date = now()->format('Y-m-d');
             $this->valid_until = now()->addDays(15)->format('Y-m-d');
             $this->items = [$this->emptyItem()];
+            $this->seller_id = auth()->id();
         }
     }
 
@@ -74,6 +78,7 @@ class Form extends Component
     {
         return [
             'client_id' => ['required', 'exists:clients,id'],
+            'seller_id' => ['nullable', 'exists:users,id'],
             'issue_date' => ['required', 'date'],
             'valid_until' => ['required', 'date', 'after_or_equal:issue_date'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -88,6 +93,7 @@ class Form extends Component
 
     protected array $validationAttributes = [
         'client_id' => 'cliente',
+        'seller_id' => 'vendedor',
         'issue_date' => 'fecha de emisión',
         'valid_until' => 'vigencia',
         'items.*.product_id' => 'producto',
@@ -133,6 +139,7 @@ class Form extends Component
                     'issue_date' => $data['issue_date'],
                     'valid_until' => $data['valid_until'],
                     'notes' => $data['notes'],
+                    'seller_id' => $data['seller_id'],
                 ],
                 $data['items'],
                 auth()->user(),
@@ -153,6 +160,7 @@ class Form extends Component
             'clients' => Client::query()->active()->orderBy('business_name')->get(['id', 'business_name']),
             'products' => Product::query()->active()->orderBy('name')->get(['id', 'name', 'code', 'unit_code']),
             'units' => SunatCatalogs::UNITS,
+            'sellers' => \App\Models\User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

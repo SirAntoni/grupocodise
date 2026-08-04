@@ -11,7 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
-class GuidesByPeriod extends Component
+class InvoicesByPeriod extends Component
 {
     use HasReportPeriod;
 
@@ -25,8 +25,11 @@ class GuidesByPeriod extends Component
     {
         [$start, $end] = $this->periodRange($reports);
 
-        return view('livewire.reports.guides-by-period', [
-            'guides' => $reports->guidesInRange($this->clientId, $start, $end, $this->includeAnnulled),
+        $invoices = $reports->invoicesInRange($this->clientId, $start, $end, $this->includeAnnulled);
+
+        return view('livewire.reports.invoices-by-period', [
+            'invoices' => $invoices,
+            'totals' => $reports->invoiceTotals($invoices),
             'start' => $start,
             'end' => $end,
             'periods' => ReportService::PERIODS,

@@ -1,5 +1,11 @@
 <x-page :title="'Cotización '.$quotation->code">
     <x-slot name="actions">
+        <a href="{{ route('cotizaciones.pdf', $quotation) }}" target="_blank">
+            <x-secondary-button>Ver PDF</x-secondary-button>
+        </a>
+        <a href="{{ route('cotizaciones.pdf', [$quotation, 'descargar' => 1]) }}">
+            <x-secondary-button>Descargar</x-secondary-button>
+        </a>
         @can('quotations.manage')
             @if ($quotation->isEditable())
                 <a href="{{ route('cotizaciones.editar', $quotation) }}" wire:navigate>
@@ -32,6 +38,11 @@
                     por {{ $quotation->statusChangedBy->name }} · {{ $quotation->status_changed_at?->format('d/m/Y H:i') }}
                 </div>
             @endif
+        </div>
+        <div>
+            <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Vendedor</div>
+            <div class="mt-0.5 font-medium text-slate-900">{{ $quotation->seller?->name ?? '—' }}</div>
+            <div class="text-xs text-slate-500">Registrada por {{ $quotation->createdBy?->name }}</div>
         </div>
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Vigencia</div>

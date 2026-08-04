@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Pdf;
 use App\Http\Controllers\Controller;
 use App\Models\CreditNote;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class CreditNotePdfController extends Controller
 {
-    public function __invoke(CreditNote $creditNote)
+    public function __invoke(Request $request, CreditNote $creditNote)
     {
         $creditNote->load(['invoice.client', 'invoice.items.product', 'electronicDocument']);
 
@@ -17,6 +18,8 @@ class CreditNotePdfController extends Controller
             'company' => config('facturacion.company'),
         ])->setPaper('a4');
 
-        return $pdf->stream('nota-credito-'.$creditNote->full_number.'.pdf');
+        $nombre = 'nota-credito-'.$creditNote->full_number.'.pdf';
+
+        return $request->boolean('descargar') ? $pdf->download($nombre) : $pdf->stream($nombre);
     }
 }

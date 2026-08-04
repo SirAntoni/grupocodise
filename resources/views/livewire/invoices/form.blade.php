@@ -1,19 +1,42 @@
 <x-page :title="$invoice ? 'Factura — borrador #'.$invoice->id : 'Nueva factura'">
     @unless ($invoice)
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-4 max-w-xl">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-5">
             <p class="text-sm text-slate-600">
-                Digita el número de una guía <strong>emitida</strong> (por ejemplo <span class="font-mono">T001-00000001</span>).
-                La factura se creará en borrador consolidando sus ítems; luego podrás agregar más guías del mismo cliente.
+                Elige la empresa y marca las guías que quieres facturar: se consolidan en un solo borrador.
             </p>
-            <div>
-                <x-input-label value="Número de guía" />
-                <x-text-input type="text" class="mt-1 block w-full font-mono" placeholder="T001-00000001"
-                              wire:model="guideNumber" wire:keydown.enter="createDraft" />
-                <x-input-error :messages="$errors->get('guideNumber')" class="mt-1" />
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <x-input-label value="Empresa" />
+                    <select wire:model.live="clientId"
+                            class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                        <option value="">Seleccione…</option>
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->id }}">{{ $client->business_name }} — {{ $client->ruc }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('clientId')" class="mt-1" />
+                </div>
+                <div>
+                    <x-input-label value="Vendedor" />
+                    <select wire:model="sellerId"
+                            class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                        <option value="">Sin vendedor</option>
+                        @foreach ($sellers as $seller)
+                            <option value="{{ $seller->id }}">{{ $seller->name }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('sellerId')" class="mt-1" />
+                </div>
             </div>
-            <div class="flex justify-end">
-                <x-primary-button wire:click="createDraft">Crear borrador</x-primary-button>
-            </div>
+
+            @if ($clientId)
+                @include('livewire.invoices.partials.selector-guias', ['titulo' => 'Guías por facturar'])
+
+                <div class="flex justify-end">
+                    <x-primary-button wire:click="createDraft">Crear borrador</x-primary-button>
+                </div>
+            @endif
         </div>
     @else
         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-5">
@@ -23,9 +46,22 @@
                     <div class="mt-0.5 font-semibold text-slate-900">{{ $invoice->client->business_name }}</div>
                     <div class="text-sm text-slate-500 font-mono">{{ $invoice->client->ruc }}</div>
                 </div>
-                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $invoice->status->badgeColor() }}">
-                    {{ $invoice->status->label() }}
-                </span>
+                <div class="flex items-start gap-4">
+                    <div class="w-52">
+                        <x-input-label value="Vendedor" />
+                        <select wire:model="sellerId"
+                                class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            <option value="">Sin vendedor</option>
+                            @foreach ($sellers as $seller)
+                                <option value="{{ $seller->id }}">{{ $seller->name }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('sellerId')" class="mt-1" />
+                    </div>
+                    <span class="mt-6 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $invoice->status->badgeColor() }}">
+                        {{ $invoice->status->label() }}
+                    </span>
+                </div>
             </div>
 
             <div>
@@ -39,14 +75,16 @@
                         </span>
                     @endforeach
                 </div>
-                <div class="mt-3 flex gap-2 max-w-md">
-                    <div class="flex-1">
-                        <x-text-input type="text" class="block w-full font-mono" placeholder="Agregar guía: T001-…"
-                                      wire:model="guideNumber" wire:keydown.enter="addGuide" />
-                        <x-input-error :messages="$errors->get('guideNumber')" class="mt-1" />
+            </div>
+
+            <div class="border-t border-slate-100 pt-5">
+                @include('livewire.invoices.partials.selector-guias', ['titulo' => 'Agregar más guías de esta empresa'])
+
+                @if ($availableGuides->isNotEmpty())
+                    <div class="mt-3 flex justify-end">
+                        <x-secondary-button wire:click="addSelectedGuides">Agregar las marcadas</x-secondary-button>
                     </div>
-                    <x-secondary-button wire:click="addGuide">Agregar</x-secondary-button>
-                </div>
+                @endif
             </div>
         </div>
 

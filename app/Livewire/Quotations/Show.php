@@ -17,7 +17,7 @@ class Show extends Component
     {
         $this->authorize('quotations.view');
 
-        $this->quotation = $quotation->load(['client', 'items.product', 'purchaseOrder', 'createdBy', 'statusChangedBy']);
+        $this->quotation = $quotation->load(['client', 'items.product', 'purchaseOrder', 'createdBy', 'seller', 'statusChangedBy']);
     }
 
     public function accept(QuotationService $service): void

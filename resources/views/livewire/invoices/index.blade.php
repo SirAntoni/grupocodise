@@ -55,6 +55,7 @@
                     <th class="px-4 py-3">Estado</th>
                     <th class="px-4 py-3">SUNAT</th>
                     <th class="px-4 py-3 text-right">Saldo</th>
+                    <th class="px-4 py-3 text-right">PDF</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -90,9 +91,19 @@
                                 —
                             @endif
                         </td>
+                        <td class="px-4 py-3 text-right whitespace-nowrap">
+                            @if ($invoice->full_number)
+                                <a href="{{ route('facturas.pdf', $invoice) }}" target="_blank"
+                                   class="font-medium text-brand-600 hover:underline">Ver</a>
+                                <a href="{{ route('facturas.pdf', [$invoice, 'descargar' => 1]) }}"
+                                   class="ms-2 font-medium text-slate-500 hover:underline">Descargar</a>
+                            @else
+                                <span class="text-slate-400">—</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="px-4 py-12 text-center text-sm text-slate-400">Sin facturas que mostrar.</td></tr>
+                    <tr><td colspan="9" class="px-4 py-12 text-center text-sm text-slate-400">Sin facturas que mostrar.</td></tr>
                 @endforelse
             </tbody>
         </table>

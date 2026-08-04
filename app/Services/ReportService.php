@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Enums\DispatchGuideStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\DispatchGuide;
 use App\Models\DispatchGuideItem;
+use App\Models\Invoice;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class ReportService
 {
@@ -70,14 +73,34 @@ class ReportService
     /**
      * Nombre de archivo del export, según el periodo consultado.
      */
-    public function fileSlug(string $period, Carbon $start, Carbon $end): string
+    public function fileSlug(string $period, Carbon $start, Carbon $end, string $prefix = 'guias'): string
     {
         return sprintf(
-            'guias-%s-%s-al-%s.xlsx',
+            '%s-%s-%s-al-%s.xlsx',
+            $prefix,
             array_key_exists($period, self::PERIODS) ? $period : 'periodo',
             $start->format('Y-m-d'),
             $end->format('Y-m-d'),
         );
+    }
+
+    /**
+     * Reglas de validación del periodo, iguales para todos los exports. Sin
+     * `periodType` se asume quincenal, así los enlaces antiguos siguen sirviendo.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    public static function periodRules(): array
+    {
+        return [
+            'periodType' => ['nullable', Rule::in(array_keys(self::PERIODS))],
+            'year' => ['required_unless:periodType,libre', 'nullable', 'integer', 'between:2020,2100'],
+            'month' => ['required_if:periodType,quincenal', 'required_if:periodType,mensual', 'nullable', 'integer', 'between:1,12'],
+            'fortnight' => ['required_if:periodType,quincenal', 'nullable', 'integer', 'in:1,2'],
+            'week' => ['required_if:periodType,semanal', 'nullable', 'integer', 'between:1,53'],
+            'from' => ['required_if:periodType,libre', 'nullable', 'date'],
+            'until' => ['required_if:periodType,libre', 'nullable', 'date'],
+        ];
     }
 
     /**
@@ -109,6 +132,44 @@ class ReportService
             ->orderBy('issue_date')
             ->orderBy('full_number')
             ->get();
+    }
+
+    /**
+     * Facturas emitidas entre dos fechas. Los borradores no tienen fecha de
+     * emisión, así que quedan fuera por definición; las anuladas solo si se
+     * piden expresamente.
+     */
+    public function invoicesInRange(?int $clientId, Carbon $start, Carbon $end, bool $includeAnnulled): Collection
+    {
+        $statuses = [InvoiceStatus::PendingSubmission, InvoiceStatus::Accepted, InvoiceStatus::Rejected];
+        if ($includeAnnulled) {
+            $statuses[] = InvoiceStatus::Annulled;
+        }
+
+        return Invoice::query()
+            ->with(['client', 'seller', 'purchaseOrder', 'receivable', 'dispatchGuides', 'electronicDocument'])
+            ->whereIn('status', $statuses)
+            ->whereBetween('issue_date', [$start->toDateString(), $end->toDateString()])
+            ->when($clientId, fn ($q) => $q->where('client_id', $clientId))
+            ->orderBy('issue_date')
+            ->orderBy('full_number')
+            ->get();
+    }
+
+    /**
+     * Totales del reporte de facturas: lo primero que mira el que cobra.
+     *
+     * @return array{gravado: float, igv: float, total: float, cobrado: float, saldo: float}
+     */
+    public function invoiceTotals(Collection $invoices): array
+    {
+        return [
+            'gravado' => round((float) $invoices->sum('taxable_amount'), 2),
+            'igv' => round((float) $invoices->sum('igv'), 2),
+            'total' => round((float) $invoices->sum('total'), 2),
+            'cobrado' => round((float) $invoices->sum(fn ($i) => (float) ($i->receivable?->paid_amount ?? 0)), 2),
+            'saldo' => round((float) $invoices->sum(fn ($i) => (float) ($i->receivable?->balance ?? 0)), 2),
+        ];
     }
 
     /**

@@ -22,7 +22,18 @@
                 <x-text-input type="date" class="mt-1 block w-full" wire:model="valid_until" />
                 <x-input-error :messages="$errors->get('valid_until')" class="mt-1" />
             </div>
-            <div class="md:col-span-3">
+            <div>
+                <x-input-label value="Vendedor" />
+                <select wire:model="seller_id"
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-lg shadow-sm text-sm">
+                    <option value="">Sin vendedor</option>
+                    @foreach ($sellers as $seller)
+                        <option value="{{ $seller->id }}">{{ $seller->name }}</option>
+                    @endforeach
+                </select>
+                <x-input-error :messages="$errors->get('seller_id')" class="mt-1" />
+            </div>
+            <div class="md:col-span-2">
                 <x-input-label value="Observaciones" />
                 <textarea wire:model="notes" rows="2"
                           class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm"></textarea>

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Reports;
 
-use App\Exports\GuidesExport;
+use App\Exports\InvoicesExport;
 use App\Http\Controllers\Controller;
 use App\Services\ReportService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
-class GuidesExportController extends Controller
+class InvoicesExportController extends Controller
 {
     public function __invoke(Request $request, ReportService $reports)
     {
@@ -22,13 +22,13 @@ class GuidesExportController extends Controller
 
         [$start, $end] = $reports->resolveRange($period, $data);
 
-        $guides = $reports->guidesInRange(
+        $invoices = $reports->invoicesInRange(
             $data['clientId'] ?? null,
             $start,
             $end,
             (bool) ($data['includeAnnulled'] ?? false),
         );
 
-        return Excel::download(new GuidesExport($guides), $reports->fileSlug($period, $start, $end, 'guias'));
+        return Excel::download(new InvoicesExport($invoices), $reports->fileSlug($period, $start, $end, 'facturas'));
     }
 }

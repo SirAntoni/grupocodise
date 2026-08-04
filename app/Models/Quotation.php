@@ -46,6 +46,11 @@ class Quotation extends Model
         return $this->hasOne(PurchaseOrder::class);
     }
 
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

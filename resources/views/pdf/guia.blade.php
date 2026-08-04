@@ -35,10 +35,7 @@
         <table class="header">
             <tr>
                 <td>
-                    <div class="company-name">{{ $company['razon_social'] }}</div>
-                    <div>RUC: {{ $company['ruc'] }}</div>
-                    <div>{{ $company['address']['direccion'] }}</div>
-                    <div>{{ $company['address']['distrito'] }} — {{ $company['address']['departamento'] }}</div>
+                    @include('pdf.partials.emisor')
                 </td>
                 <td align="right">
                     <div class="doc-box">

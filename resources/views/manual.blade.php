@@ -170,7 +170,8 @@
                         <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <ol class="mt-4 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
-                        <li><strong>Cotizaciones → Nueva cotización</strong>: cliente, vigencia e ítems con precio (sin IGV; los totales con IGV se calculan solos). Nace en estado <em>Enviada</em>.</li>
+                        <li><strong>Cotizaciones → Nueva cotización</strong>: cliente, vigencia, <strong>vendedor</strong> e ítems con precio (sin IGV; los totales con IGV se calculan solos). Nace en estado <em>Enviada</em>.</li>
+                        <li>Desde el detalle (o el listado) tienes <strong>Ver PDF</strong> y <strong>Descargar</strong>: es el documento que le mandas al cliente, con tu logo, el vendedor y las cuentas para el pago.</li>
                         <li>Cuando el cliente responda, márcala <strong>Aceptada</strong> o <strong>Rechazada</strong> (editable solo mientras está <em>Enviada</em>).</li>
                         <li>De una cotización aceptada pulsa <strong>Generar orden de compra</strong>: crea la OC con los datos precargados, enlazada a la cotización.</li>
                         <li>Si el cliente envía su propia OC: <strong>Órdenes de compra → Registrar OC recibida</strong> con número, fecha, monto y el <strong>PDF adjunto</strong>. Luego se puede vincular a la guía (campo "Orden de compra" del borrador de guía) y la factura la hereda.</li>
@@ -186,15 +187,16 @@
                     </div>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Facturar una o varias guías</h3>
                     <ol class="mt-2 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
-                        <li><strong>Facturas → Nueva factura</strong>: digita el número de una guía <em>emitida</em> (ej. <span class="font-mono">T001-00000012</span>) y pulsa <strong>Crear borrador</strong>.</li>
-                        <li>Agrega más guías del mismo cliente digitando su número; los ítems se <strong>consolidan</strong> sumando cantidades por producto. Una guía no puede estar en dos facturas activas — el sistema lo bloquea.</li>
+                        <li><strong>Facturas → Nueva factura</strong>: elige la <strong>empresa</strong> y aparecerán todas sus guías emitidas que aún no están facturadas. <strong>Marca</strong> las que quieras incluir y pulsa <strong>Crear borrador</strong>. Si son muchas, usa el buscador por número.</li>
+                        <li>Elige el <strong>vendedor</strong> (quien hizo la venta): se propone tu usuario, pero puedes cambiarlo. Sale impreso en la factura.</li>
+                        <li>Dentro del borrador puedes <strong>agregar más guías</strong> de la misma empresa con el mismo selector; los ítems se <strong>consolidan</strong> sumando cantidades por producto. Una guía no puede estar en dos facturas activas — el sistema no la ofrece.</li>
                         <li>Digita el <strong>precio de venta</strong> de cada ítem (valor sin IGV); subtotal, IGV 18 % y total se recalculan solos.</li>
                         <li>Si aplica, marca <strong>Agregar línea de zona lejana</strong> y pon el monto.</li>
                         <li><strong>Emitir factura</strong>: asigna el número (F001-…), fija el vencimiento a 30 días y la envía a SUNAT en segundo plano.</li>
                     </ol>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Después de emitir</h3>
                     <ul class="mt-2 space-y-2 text-sm leading-relaxed text-slate-700">
-                        <li>• En el detalle ves las <strong>guías asociadas</strong>, el estado SUNAT, el <strong>PDF</strong> y la cuenta por cobrar con su saldo.</li>
+                        <li>• En el detalle ves las <strong>guías asociadas</strong>, el estado SUNAT y la cuenta por cobrar con su saldo. <strong>Ver PDF</strong> lo abre en el navegador y <strong>Descargar</strong> lo baja como archivo; también tienes ambos desde el listado de facturas.</li>
                         <li>• Si SUNAT la <em>rechaza</em>: el motivo queda visible; corrige y pulsa <strong>Reenviar a SUNAT</strong> (misma numeración). <strong>Procesar envío ahora</strong> fuerza el envío sin esperar la cola.</li>
                         <li>• <strong>Anular con NC</strong> (facturas aceptadas): emite una <strong>nota de crédito por el total</strong> con motivo, descargable en PDF. Al aceptarla SUNAT, la factura queda <em>Anulada</em>, su cuenta por cobrar también, y las guías quedan <strong>libres para refacturar</strong>.</li>
                     </ul>
@@ -228,6 +230,7 @@
                         <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">usuario</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm leading-relaxed text-slate-700">
+                        <li>• <strong>Facturas por periodo</strong>: mismas opciones de corte (semanal, quincenal, mensual o rango de fechas) sobre las facturas emitidas, con tarjetas de <em>total facturado</em> y <em>saldo por cobrar</em>, el vendedor de cada una y su Excel. Los borradores no aparecen porque todavía no tienen fecha de emisión.</li>
                         <li>• <strong>Guías por periodo</strong>: elige la empresa y el corte que necesites — <em>semanal</em> (lunes a domingo), <em>quincenal</em> (1–15 o 16–fin de mes), <em>mensual</em> o un <em>rango de fechas</em> cualquiera. Por defecto muestra emitidas; activa <em>Mostrar anuladas</em> si las necesitas. <strong>Exportar a Excel</strong> genera el archivo para enviar al cliente, con el periodo en el nombre.</li>
                         <li>• <strong>Diferencias sol./desp.</strong>: por periodo, compara lo <em>solicitado</em> contra lo <em>despachado</em> por producto — el control interno de esas diferencias. También exporta a Excel.</li>
                     </ul>

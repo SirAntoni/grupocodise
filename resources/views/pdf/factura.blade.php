@@ -28,10 +28,7 @@
     <table class="header">
         <tr>
             <td>
-                <div class="company-name">{{ $company['razon_social'] }}</div>
-                <div>RUC: {{ $company['ruc'] }}</div>
-                <div>{{ $company['address']['direccion'] }}</div>
-                <div>{{ $company['address']['distrito'] }} — {{ $company['address']['departamento'] }}</div>
+                @include('pdf.partials.emisor')
             </td>
             <td align="right">
                 <div class="doc-box">
@@ -55,6 +52,9 @@
                     <span class="label">Vencimiento:</span> {{ $invoice->due_date?->format('d/m/Y') }}<br>
                     <span class="label">Moneda:</span> SOLES<br>
                     <span class="label">Forma de pago:</span> {{ $invoice->payment_type === 'credito' ? 'Crédito' : 'Contado' }}
+                    @if ($invoice->seller)
+                        <br><span class="label">Vendedor:</span> {{ $invoice->seller->name }}
+                    @endif
                     @if ($invoice->purchaseOrder)
                         <br><span class="label">O/C:</span> {{ $invoice->purchaseOrder->number }}
                     @endif
@@ -111,6 +111,8 @@
             Cuota 1: S/ {{ number_format((float) $invoice->total, 2) }} — vence el {{ $invoice->due_date->format('d/m/Y') }}
         </div>
     @endif
+
+    @include('pdf.partials.cuentas')
 
     @if ($invoice->electronicDocument?->digest_hash)
         <div class="footnote">Valor resumen: {{ $invoice->electronicDocument->digest_hash }}</div>

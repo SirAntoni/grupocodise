@@ -12,7 +12,10 @@
         @endcan
         @if ($invoice->full_number)
             <a href="{{ route('facturas.pdf', ['invoice' => $invoice->id]) }}" target="_blank">
-                <x-secondary-button>PDF</x-secondary-button>
+                <x-secondary-button>Ver PDF</x-secondary-button>
+            </a>
+            <a href="{{ route('facturas.pdf', ['invoice' => $invoice->id, 'descargar' => 1]) }}">
+                <x-secondary-button>Descargar</x-secondary-button>
             </a>
         @endif
         @can('resend', $invoice)
@@ -69,6 +72,10 @@
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Orden de compra</div>
             <div class="mt-0.5 font-medium text-slate-900">{{ $invoice->purchaseOrder?->number ?? '—' }}</div>
+        </div>
+        <div>
+            <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Vendedor</div>
+            <div class="mt-0.5 font-medium text-slate-900">{{ $invoice->seller?->name ?? '—' }}</div>
         </div>
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Registrada por</div>

@@ -3,8 +3,10 @@
 use App\Http\Controllers\Pdf\CreditNotePdfController;
 use App\Http\Controllers\Pdf\DispatchGuidePdfController;
 use App\Http\Controllers\Pdf\InvoicePdfController;
+use App\Http\Controllers\Pdf\QuotationPdfController;
 use App\Http\Controllers\PurchaseOrderFileController;
 use App\Http\Controllers\Reports\GuidesExportController;
+use App\Http\Controllers\Reports\InvoicesExportController;
 use App\Http\Controllers\Reports\DifferencesExportController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +71,8 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('cotizaciones', App\Livewire\Quotations\Index::class)->name('cotizaciones.index');
         Route::get('cotizaciones/{quotation}', App\Livewire\Quotations\Show::class)
             ->whereNumber('quotation')->name('cotizaciones.ver');
+        Route::get('cotizaciones/{quotation}/pdf', QuotationPdfController::class)
+            ->whereNumber('quotation')->name('cotizaciones.pdf');
     });
     Route::middleware('permission:quotations.manage')->group(function () {
         Route::get('cotizaciones/crear', App\Livewire\Quotations\Form::class)->name('cotizaciones.crear');
@@ -92,6 +96,12 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::redirect('reportes/guias-quincenal', 'reportes/guias');
         Route::get('reportes/guias', App\Livewire\Reports\GuidesByPeriod::class)->name('reportes.guias');
         Route::get('reportes/guias/excel', GuidesExportController::class)->name('reportes.guias.excel');
+        // El reporte de facturas expone montos de venta: exige además el
+        // permiso del módulo, no solo el de reportes.
+        Route::middleware('permission:invoices.view')->group(function () {
+            Route::get('reportes/facturas', App\Livewire\Reports\InvoicesByPeriod::class)->name('reportes.facturas');
+            Route::get('reportes/facturas/excel', InvoicesExportController::class)->name('reportes.facturas.excel');
+        });
         Route::get('reportes/diferencias', App\Livewire\Reports\Differences::class)->name('reportes.diferencias');
         Route::get('reportes/diferencias/excel', DifferencesExportController::class)->name('reportes.diferencias.excel');
     });

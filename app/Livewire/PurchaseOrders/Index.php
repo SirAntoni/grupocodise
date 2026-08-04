@@ -33,6 +33,8 @@ class Index extends Component
 
     public ?string $notes = null;
 
+    public ?int $seller_id = null;
+
     public $pdf = null;
 
     protected function rules(): array
@@ -46,12 +48,14 @@ class Index extends Component
             'date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'seller_id' => ['nullable', 'exists:users,id'],
             'pdf' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ];
     }
 
     protected array $validationAttributes = [
         'client_id' => 'cliente',
+        'seller_id' => 'vendedor',
         'number' => 'número de OC',
         'date' => 'fecha',
         'amount' => 'monto',
@@ -69,6 +73,7 @@ class Index extends Component
     {
         $this->authorize('purchase-orders.manage');
         $this->reset(['client_id', 'number', 'amount', 'notes', 'pdf']);
+        $this->seller_id = auth()->id();
         $this->date = now()->format('Y-m-d');
         $this->resetValidation();
         $this->showForm = true;
@@ -87,6 +92,7 @@ class Index extends Component
             'amount' => $data['amount'],
             'notes' => $data['notes'],
             'pdf_path' => $this->pdf?->store('ordenes-compra'),
+            'seller_id' => $data['seller_id'] ?? auth()->id(),
             'created_by' => auth()->id(),
         ]);
 
@@ -97,7 +103,7 @@ class Index extends Component
     public function render(): View
     {
         $orders = PurchaseOrder::query()
-            ->with(['client', 'quotation'])
+            ->with(['client', 'quotation', 'seller'])
             ->withCount(['dispatchGuides', 'invoices'])
             ->when($this->clientFilter, fn ($q) => $q->where('client_id', $this->clientFilter))
             ->when($this->originFilter !== '', fn ($q) => $q->where('origin', $this->originFilter))
@@ -107,6 +113,7 @@ class Index extends Component
         return view('livewire.purchase-orders.index', [
             'orders' => $orders,
             'clients' => Client::query()->orderBy('business_name')->get(['id', 'business_name']),
+            'sellers' => \App\Models\User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

@@ -29,32 +29,65 @@ class InvoiceService
      */
     public function createDraftFromGuideNumbers(array $guideNumbers, User $user): Invoice
     {
-        return DB::transaction(function () use ($guideNumbers, $user) {
-            $guides = $this->resolveGuides($guideNumbers);
+        return DB::transaction(fn () => $this->createDraft($this->resolveGuides($guideNumbers), $user));
+    }
 
-            $clientIds = $guides->pluck('client_id')->unique();
-            if ($clientIds->count() > 1) {
-                throw new InvalidArgumentException('Todas las guías deben pertenecer al mismo cliente.');
-            }
+    /**
+     * Igual que la anterior, pero con las guías marcadas en pantalla.
+     *
+     * @param  list<int>  $guideIds
+     */
+    public function createDraftFromGuideIds(array $guideIds, User $user): Invoice
+    {
+        return DB::transaction(fn () => $this->createDraft($this->resolveGuidesByIds($guideIds), $user));
+    }
 
-            $purchaseOrderIds = $guides->pluck('purchase_order_id')->filter()->unique();
-            if ($purchaseOrderIds->count() > 1) {
-                throw new InvalidArgumentException('Las guías consolidadas deben pertenecer a la misma orden de compra.');
-            }
+    /**
+     * Guías emitidas de un cliente que todavía se pueden facturar: sin factura
+     * activa encima y sin rechazo de SUNAT pendiente de corregir.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, DispatchGuide>
+     */
+    public function availableGuidesFor(int $clientId, string $search = '')
+    {
+        return DispatchGuide::query()
+            ->with(['items', 'requirement'])
+            ->where('client_id', $clientId)
+            ->where('status', DispatchGuideStatus::Issued)
+            ->whereDoesntHave('electronicDocument', fn ($q) => $q->where('sunat_status', SunatStatus::Rejected))
+            ->whereDoesntHave('invoices', fn ($q) => $q->whereIn('invoices.status', InvoiceStatus::activeStates()))
+            ->when($search !== '', fn ($q) => $q->where('full_number', 'like', '%'.$search.'%'))
+            ->orderByDesc('issue_date')
+            ->orderByDesc('id')
+            ->get();
+    }
 
-            $invoice = Invoice::query()->create([
-                'client_id' => $clientIds->first(),
-                'purchase_order_id' => $purchaseOrderIds->first(),
-                'status' => InvoiceStatus::Draft,
-                'payment_type' => 'credito',
-                'created_by' => $user->id,
-            ]);
+    protected function createDraft($guides, User $user): Invoice
+    {
+        $clientIds = $guides->pluck('client_id')->unique();
+        if ($clientIds->count() > 1) {
+            throw new InvalidArgumentException('Todas las guías deben pertenecer al mismo cliente.');
+        }
 
-            $this->attachGuides($invoice, $guides);
-            $this->consolidateItems($invoice);
+        $purchaseOrderIds = $guides->pluck('purchase_order_id')->filter()->unique();
+        if ($purchaseOrderIds->count() > 1) {
+            throw new InvalidArgumentException('Las guías consolidadas deben pertenecer a la misma orden de compra.');
+        }
 
-            return $invoice->refresh()->load('items', 'dispatchGuides');
-        });
+        $invoice = Invoice::query()->create([
+            'client_id' => $clientIds->first(),
+            'purchase_order_id' => $purchaseOrderIds->first(),
+            'status' => InvoiceStatus::Draft,
+            'payment_type' => 'credito',
+            // El vendedor se propone con quien registra y se puede cambiar.
+            'seller_id' => $user->id,
+            'created_by' => $user->id,
+        ]);
+
+        $this->attachGuides($invoice, $guides);
+        $this->consolidateItems($invoice);
+
+        return $invoice->refresh()->load('items', 'dispatchGuides');
     }
 
     /**
@@ -64,28 +97,47 @@ class InvoiceService
     {
         $this->assertEditable($invoice);
 
-        return DB::transaction(function () use ($invoice, $guideNumber) {
-            $guides = $this->resolveGuides([$guideNumber]);
-            $guide = $guides->first();
+        return DB::transaction(fn () => $this->attachToDraft($invoice, $this->resolveGuides([$guideNumber])));
+    }
 
+    /**
+     * Agrega al borrador las guías marcadas en pantalla.
+     *
+     * @param  list<int>  $guideIds
+     */
+    public function addGuideIds(Invoice $invoice, array $guideIds): Invoice
+    {
+        $this->assertEditable($invoice);
+
+        return DB::transaction(fn () => $this->attachToDraft($invoice, $this->resolveGuidesByIds($guideIds)));
+    }
+
+    protected function attachToDraft(Invoice $invoice, $guides): Invoice
+    {
+        foreach ($guides as $guide) {
             if ($guide->client_id !== $invoice->client_id) {
-                throw new InvalidArgumentException('La guía pertenece a otro cliente.');
+                throw new InvalidArgumentException("La guía {$guide->full_number} pertenece a otro cliente.");
             }
 
             if ($guide->purchase_order_id && $invoice->purchase_order_id && $guide->purchase_order_id !== $invoice->purchase_order_id) {
-                throw new InvalidArgumentException('La guía pertenece a otra orden de compra.');
+                throw new InvalidArgumentException("La guía {$guide->full_number} pertenece a otra orden de compra.");
             }
+        }
 
-            $this->attachGuides($invoice, $guides);
+        $purchaseOrderIds = $guides->pluck('purchase_order_id')->filter()->unique();
+        if ($purchaseOrderIds->count() > 1) {
+            throw new InvalidArgumentException('Las guías marcadas pertenecen a órdenes de compra distintas.');
+        }
 
-            if (! $invoice->purchase_order_id && $guide->purchase_order_id) {
-                $invoice->update(['purchase_order_id' => $guide->purchase_order_id]);
-            }
+        $this->attachGuides($invoice, $guides);
 
-            $this->consolidateItems($invoice);
+        if (! $invoice->purchase_order_id && $purchaseOrderIds->isNotEmpty()) {
+            $invoice->update(['purchase_order_id' => $purchaseOrderIds->first()]);
+        }
 
-            return $invoice->refresh()->load('items', 'dispatchGuides');
-        });
+        $this->consolidateItems($invoice);
+
+        return $invoice->refresh()->load('items', 'dispatchGuides');
     }
 
     public function removeGuide(Invoice $invoice, DispatchGuide $guide): Invoice
@@ -290,6 +342,45 @@ class InvoiceService
             throw new InvalidArgumentException('Guías no encontradas: '.$missing->implode(', ').'.');
         }
 
+        $this->assertInvoiceable($guides);
+
+        return $guides;
+    }
+
+    /**
+     * Igual, pero por id: es lo que llega cuando se marcan en pantalla.
+     *
+     * @param  list<int>  $guideIds
+     */
+    protected function resolveGuidesByIds(array $guideIds)
+    {
+        $ids = collect($guideIds)->filter()->map(fn ($id) => (int) $id)->unique()->values();
+
+        if ($ids->isEmpty()) {
+            throw new InvalidArgumentException('Marca al menos una guía.');
+        }
+
+        $guides = DispatchGuide::query()
+            ->with(['items', 'electronicDocument'])
+            ->whereIn('id', $ids)
+            ->lockForUpdate()
+            ->get();
+
+        if ($guides->count() !== $ids->count()) {
+            throw new InvalidArgumentException('Alguna de las guías marcadas ya no existe.');
+        }
+
+        $this->assertInvoiceable($guides);
+
+        return $guides;
+    }
+
+    /**
+     * Una guía solo se factura si está emitida, sin rechazo de SUNAT pendiente
+     * y sin otra factura activa encima.
+     */
+    protected function assertInvoiceable($guides): void
+    {
         foreach ($guides as $guide) {
             if ($guide->status !== DispatchGuideStatus::Issued) {
                 throw new InvalidArgumentException("La guía {$guide->full_number} no está emitida.");
@@ -304,8 +395,6 @@ class InvoiceService
                 throw new InvalidArgumentException("La guía {$guide->full_number} ya está en la factura {$reference}.");
             }
         }
-
-        return $guides;
     }
 
     protected function attachGuides(Invoice $invoice, $guides): void

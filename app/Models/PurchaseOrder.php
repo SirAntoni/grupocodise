@@ -44,6 +44,11 @@ class PurchaseOrder extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function seller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

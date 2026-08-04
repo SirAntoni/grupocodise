@@ -21,6 +21,22 @@ return [
             'provincia' => env('FACT_PROVINCIA', 'LIMA'),
             'departamento' => env('FACT_DEPARTAMENTO', 'LIMA'),
         ],
+        'telefono' => env('FACT_TELEFONO'),
+        'email' => env('FACT_EMAIL'),
+
+        // Logo para los PDFs: ruta relativa a public/. Si el archivo no existe
+        // se imprime solo la razón social, sin romper nada.
+        'logo' => env('FACT_LOGO', 'images/logo-empresa.png'),
+
+        /*
+         * Cuentas para el pie de la factura. Se imprimen solo las que tengan
+         * número, así que mientras estén vacías el bloque no aparece.
+         */
+        'cuentas' => [
+            ['banco' => 'BCP', 'tipo' => 'Cuenta corriente soles', 'numero' => env('FACT_CTA_BCP'), 'cci' => env('FACT_CCI_BCP')],
+            ['banco' => 'BBVA', 'tipo' => 'Cuenta de ahorro soles', 'numero' => env('FACT_CTA_BBVA'), 'cci' => env('FACT_CCI_BBVA')],
+        ],
+        'yape' => env('FACT_YAPE'),
     ],
 
     /*

@@ -65,6 +65,7 @@
                         </td>
                         <td class="px-4 py-3 font-mono">{{ $quotation->purchaseOrder?->number ?? '—' }}</td>
                         <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                            <a href="{{ route('cotizaciones.pdf', $quotation) }}" target="_blank" class="font-medium text-slate-600 hover:underline">PDF</a>
                             @can('quotations.manage')
                                 @if ($quotation->isEditable())
                                     <a href="{{ route('cotizaciones.editar', $quotation) }}" wire:navigate class="font-medium text-brand-700 hover:text-brand-800 hover:underline">Editar</a>

@@ -32,8 +32,8 @@
             </td>
             <td align="right">
                 <div class="doc-box">
-                    <div class="title">NOTA DE CRÉDITO ELECTRÓNICA</div>
-                    <div class="number">{{ $creditNote->full_number }}</div>
+                    <div class="title">COTIZACIÓN</div>
+                    <div class="number">{{ $quotation->code }}</div>
                 </div>
             </td>
         </tr>
@@ -43,26 +43,27 @@
         <table width="100%">
             <tr>
                 <td>
-                    <span class="label">Señor(es):</span> <strong>{{ $creditNote->invoice->client->business_name }}</strong><br>
-                    <span class="label">RUC:</span> {{ $creditNote->invoice->client->ruc }}
+                    <span class="label">Señor(es):</span> <strong>{{ $quotation->client->business_name }}</strong><br>
+                    <span class="label">RUC:</span> {{ $quotation->client->ruc }}<br>
+                    <span class="label">Dirección:</span> {{ $quotation->client->address }}
                 </td>
-                <td width="230" style="vertical-align: top;">
-                    <span class="label">Fecha de emisión:</span> {{ $creditNote->issue_date->format('d/m/Y') }}<br>
-                    <span class="label">Documento afectado:</span> FACTURA {{ $creditNote->affected_full_number ?? $creditNote->invoice->full_number }}<br>
-                    <span class="label">Tipo:</span> Anulación de la operación (01)
+                <td width="220" style="vertical-align: top;">
+                    <span class="label">Fecha:</span> {{ $quotation->issue_date->format('d/m/Y') }}<br>
+                    <span class="label">Válida hasta:</span> {{ $quotation->valid_until->format('d/m/Y') }}<br>
+                    <span class="label">Moneda:</span> SOLES
+                    @if ($quotation->seller)
+                        <br><span class="label">Vendedor:</span> {{ $quotation->seller->name }}
+                    @endif
                 </td>
             </tr>
         </table>
-    </div>
-
-    <div class="section">
-        <span class="label">Motivo:</span> {{ $creditNote->motive_description }}
     </div>
 
     <table class="items">
         <thead>
             <tr>
                 <th style="width: 26px;">#</th>
+                <th style="width: 65px;">Código</th>
                 <th>Descripción</th>
                 <th style="width: 45px;">Unidad</th>
                 <th style="width: 60px;">Cantidad</th>
@@ -71,9 +72,10 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($creditNote->invoice->items as $item)
+            @foreach ($quotation->items as $item)
                 <tr>
                     <td class="center">{{ $loop->iteration }}</td>
+                    <td>{{ $item->product?->code ?? '—' }}</td>
                     <td>{{ $item->description }}</td>
                     <td class="center">{{ $item->unit_code }}</td>
                     <td class="right">{{ number_format((float) $item->quantity, 2) }}</td>
@@ -84,17 +86,26 @@
         </tbody>
     </table>
 
-    <div class="legend">{{ \App\Support\NumeroALetras::legend((float) $creditNote->total) }}</div>
+    <div class="legend">{{ \App\Support\NumeroALetras::legend((float) $quotation->total) }}</div>
 
     <table class="totals">
-        <tr><td class="label">Op. gravadas:</td><td class="right">S/ {{ number_format((float) $creditNote->taxable_amount, 2) }}</td></tr>
-        <tr><td class="label">IGV (18%):</td><td class="right">S/ {{ number_format((float) $creditNote->igv, 2) }}</td></tr>
-        <tr class="total-row"><td>IMPORTE TOTAL:</td><td class="right">S/ {{ number_format((float) $creditNote->total, 2) }}</td></tr>
+        <tr><td class="label">Op. gravadas:</td><td class="right">S/ {{ number_format((float) $quotation->taxable_amount, 2) }}</td></tr>
+        <tr><td class="label">IGV (18%):</td><td class="right">S/ {{ number_format((float) $quotation->igv, 2) }}</td></tr>
+        <tr class="total-row"><td>TOTAL:</td><td class="right">S/ {{ number_format((float) $quotation->total, 2) }}</td></tr>
     </table>
 
-    @if ($creditNote->electronicDocument?->digest_hash)
-        <div class="footnote">Valor resumen: {{ $creditNote->electronicDocument->digest_hash }}</div>
+    @if ($quotation->notes)
+        <div class="section" style="margin-top: 8px;">
+            <span class="label">Observaciones</span>
+            <div>{{ $quotation->notes }}</div>
+        </div>
     @endif
-    <div class="footnote">Representación impresa de la Nota de Crédito Electrónica.</div>
+
+    @include('pdf.partials.cuentas')
+
+    <div class="footnote">
+        Cotización válida hasta el {{ $quotation->valid_until->format('d/m/Y') }}. Los precios incluyen IGV según el detalle.
+        Este documento no es un comprobante de pago.
+    </div>
 </body>
 </html>
