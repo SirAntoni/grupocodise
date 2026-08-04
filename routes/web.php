@@ -4,7 +4,7 @@ use App\Http\Controllers\Pdf\CreditNotePdfController;
 use App\Http\Controllers\Pdf\DispatchGuidePdfController;
 use App\Http\Controllers\Pdf\InvoicePdfController;
 use App\Http\Controllers\PurchaseOrderFileController;
-use App\Http\Controllers\Reports\BiweeklyGuidesExportController;
+use App\Http\Controllers\Reports\GuidesExportController;
 use App\Http\Controllers\Reports\DifferencesExportController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,8 +89,9 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
 
     // Reportes
     Route::middleware('permission:reports.view')->group(function () {
-        Route::get('reportes/guias-quincenal', App\Livewire\Reports\BiweeklyGuides::class)->name('reportes.guias');
-        Route::get('reportes/guias-quincenal/excel', BiweeklyGuidesExportController::class)->name('reportes.guias.excel');
+        Route::redirect('reportes/guias-quincenal', 'reportes/guias');
+        Route::get('reportes/guias', App\Livewire\Reports\GuidesByPeriod::class)->name('reportes.guias');
+        Route::get('reportes/guias/excel', GuidesExportController::class)->name('reportes.guias.excel');
         Route::get('reportes/diferencias', App\Livewire\Reports\Differences::class)->name('reportes.diferencias');
         Route::get('reportes/diferencias/excel', DifferencesExportController::class)->name('reportes.diferencias.excel');
     });

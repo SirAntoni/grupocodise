@@ -10,6 +10,14 @@ use Illuminate\Support\Collection;
 
 class ReportService
 {
+    /** Periodos que ofrece el reporte de guías. */
+    public const PERIODS = [
+        'semanal' => 'Semanal',
+        'quincenal' => 'Quincenal',
+        'mensual' => 'Mensual',
+        'libre' => 'Rango de fechas',
+    ];
+
     /**
      * Rango de fechas de una quincena: 1 = del 1 al 15, 2 = del 16 a fin de mes.
      *
@@ -26,6 +34,53 @@ class ReportService
     }
 
     /**
+     * Rango de cualquiera de los periodos. La semana va de lunes a domingo.
+     *
+     * @param  array{year?: int|null, month?: int|null, fortnight?: int|null, week?: int|null, from?: string|null, until?: string|null}  $params
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    public function resolveRange(string $period, array $params): array
+    {
+        $year = (int) ($params['year'] ?? now()->year);
+        $month = (int) ($params['month'] ?? now()->month);
+
+        if ($period === 'semanal') {
+            $start = Carbon::now()->setISODate($year, (int) ($params['week'] ?? now()->isoWeek()))->startOfWeek(Carbon::MONDAY);
+
+            return [$start, $start->copy()->endOfWeek(Carbon::SUNDAY)];
+        }
+
+        if ($period === 'mensual') {
+            $start = Carbon::create($year, $month, 1)->startOfMonth();
+
+            return [$start, $start->copy()->endOfMonth()];
+        }
+
+        if ($period === 'libre') {
+            $start = Carbon::parse($params['from'] ?: now()->startOfMonth())->startOfDay();
+            $end = Carbon::parse($params['until'] ?: now())->endOfDay();
+
+            // Fechas invertidas: se ordenan en vez de devolver un rango vacío.
+            return $start->lte($end) ? [$start, $end] : [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+        }
+
+        return $this->biweeklyRange($year, $month, (int) ($params['fortnight'] ?? 1));
+    }
+
+    /**
+     * Nombre de archivo del export, según el periodo consultado.
+     */
+    public function fileSlug(string $period, Carbon $start, Carbon $end): string
+    {
+        return sprintf(
+            'guias-%s-%s-al-%s.xlsx',
+            array_key_exists($period, self::PERIODS) ? $period : 'periodo',
+            $start->format('Y-m-d'),
+            $end->format('Y-m-d'),
+        );
+    }
+
+    /**
      * Guías del periodo quincenal con sus ítems, por empresa.
      * Incluye emitidas; las anuladas solo si $includeAnnulled.
      */
@@ -33,6 +88,14 @@ class ReportService
     {
         [$start, $end] = $this->biweeklyRange($year, $month, $fortnight);
 
+        return $this->guidesInRange($clientId, $start, $end, $includeAnnulled);
+    }
+
+    /**
+     * Guías emitidas entre dos fechas, con sus ítems, por empresa.
+     */
+    public function guidesInRange(?int $clientId, Carbon $start, Carbon $end, bool $includeAnnulled): Collection
+    {
         $statuses = [DispatchGuideStatus::Issued];
         if ($includeAnnulled) {
             $statuses[] = DispatchGuideStatus::Annulled;

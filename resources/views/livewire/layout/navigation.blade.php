@@ -135,7 +135,7 @@ new class extends Component
                     <div class="space-y-1">
                         <x-sidebar-link :href="route('reportes.guias')" :active="request()->routeIs('reportes.guias')" wire:navigate>
                             <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
-                            Guías por quincena
+                            Guías por periodo
                         </x-sidebar-link>
                         <x-sidebar-link :href="route('reportes.diferencias')" :active="request()->routeIs('reportes.diferencias')" wire:navigate>
                             <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 9 7.5l4.5 4.5L21 4.5m0 0h-5.25M21 4.5v5.25M3 20.25h18"/></svg>

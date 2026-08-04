@@ -1,11 +1,25 @@
-<x-page title="Reporte quincenal de guías por empresa">
+@php
+    $exportParams = [
+        'clientId' => $clientId,
+        'periodType' => $periodType,
+        'year' => $year,
+        'month' => $month,
+        'fortnight' => $fortnight,
+        'week' => $week,
+        'from' => $from,
+        'until' => $until,
+        'includeAnnulled' => $includeAnnulled ? 1 : 0,
+    ];
+@endphp
+
+<x-page title="Reporte de guías por empresa">
     <x-slot name="actions">
-        <a href="{{ route('reportes.guias.excel', ['clientId' => $clientId, 'year' => $year, 'month' => $month, 'fortnight' => $fortnight, 'includeAnnulled' => $includeAnnulled ? 1 : 0]) }}">
+        <a href="{{ route('reportes.guias.excel', $exportParams) }}">
             <x-primary-button>Exportar a Excel</x-primary-button>
         </a>
     </x-slot>
 
-    <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-4 grid gap-3 md:grid-cols-5 items-end">
+    <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-4 grid gap-3 md:grid-cols-3 lg:grid-cols-5 items-end">
         <div>
             <x-input-label value="Empresa" />
             <select wire:model.live="clientId"
@@ -17,31 +31,73 @@
             </select>
         </div>
         <div>
-            <x-input-label value="Año" />
-            <select wire:model.live="year"
+            <x-input-label value="Periodo" />
+            <select wire:model.live="periodType"
                     class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
-                @for ($y = now()->year; $y >= now()->year - 4; $y--)
-                    <option value="{{ $y }}">{{ $y }}</option>
-                @endfor
-            </select>
-        </div>
-        <div>
-            <x-input-label value="Mes" />
-            <select wire:model.live="month"
-                    class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
-                @foreach (['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] as $i => $name)
-                    <option value="{{ $i + 1 }}">{{ $name }}</option>
+                @foreach ($periods as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
                 @endforeach
             </select>
         </div>
-        <div>
-            <x-input-label value="Quincena" />
-            <select wire:model.live="fortnight"
-                    class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
-                <option value="1">1.ª (del 1 al 15)</option>
-                <option value="2">2.ª (del 16 a fin de mes)</option>
-            </select>
-        </div>
+
+        @if ($periodType !== 'libre')
+            <div>
+                <x-input-label value="Año" />
+                <select wire:model.live="year"
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
+                    @for ($y = now()->year; $y >= now()->year - 4; $y--)
+                        <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
+        @endif
+
+        @if (in_array($periodType, ['quincenal', 'mensual']))
+            <div>
+                <x-input-label value="Mes" />
+                <select wire:model.live="month"
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
+                    @foreach (['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] as $i => $name)
+                        <option value="{{ $i + 1 }}">{{ $name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
+        @if ($periodType === 'quincenal')
+            <div>
+                <x-input-label value="Quincena" />
+                <select wire:model.live="fortnight"
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
+                    <option value="1">1.ª (del 1 al 15)</option>
+                    <option value="2">2.ª (del 16 a fin de mes)</option>
+                </select>
+            </div>
+        @endif
+
+        @if ($periodType === 'semanal')
+            <div>
+                <x-input-label value="Semana" />
+                <select wire:model.live="week"
+                        class="mt-1 block w-full border-slate-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">
+                    @foreach ($weeks as $number => $label)
+                        <option value="{{ $number }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
+        @if ($periodType === 'libre')
+            <div>
+                <x-input-label value="Desde" />
+                <x-text-input type="date" class="mt-1 block w-full" wire:model.live="from" />
+            </div>
+            <div>
+                <x-input-label value="Hasta" />
+                <x-text-input type="date" class="mt-1 block w-full" wire:model.live="until" />
+            </div>
+        @endif
+
         <label class="inline-flex items-center gap-2 text-sm pb-2">
             <input type="checkbox" wire:model.live="includeAnnulled"
                    class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">

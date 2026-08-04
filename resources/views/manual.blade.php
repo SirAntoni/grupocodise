@@ -228,7 +228,7 @@
                         <span class="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-800">operaciones</span>
                     </div>
                     <ul class="mt-4 space-y-2 text-sm leading-relaxed text-slate-700">
-                        <li>• <strong>Guías por quincena</strong>: elige empresa, mes y quincena (1–15 o 16–fin). Por defecto muestra emitidas; activa <em>Mostrar anuladas</em> si las necesitas. <strong>Exportar a Excel</strong> genera el archivo para enviar al cliente en cada corte.</li>
+                        <li>• <strong>Guías por periodo</strong>: elige la empresa y el corte que necesites — <em>semanal</em> (lunes a domingo), <em>quincenal</em> (1–15 o 16–fin de mes), <em>mensual</em> o un <em>rango de fechas</em> cualquiera. Por defecto muestra emitidas; activa <em>Mostrar anuladas</em> si las necesitas. <strong>Exportar a Excel</strong> genera el archivo para enviar al cliente, con el periodo en el nombre.</li>
                         <li>• <strong>Diferencias sol./desp.</strong>: por periodo, compara lo <em>solicitado</em> contra lo <em>despachado</em> por producto — el control interno de esas diferencias. También exporta a Excel.</li>
                     </ul>
                 </section>

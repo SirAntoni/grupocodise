@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class BiweeklyGuidesExport implements FromCollection, ShouldAutoSize, WithHeadings
+class GuidesExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
     public function __construct(protected Collection $guides) {}
 
