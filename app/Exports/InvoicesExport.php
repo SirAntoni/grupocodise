@@ -9,20 +9,30 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class InvoicesExport implements FromCollection, ShouldAutoSize, WithHeadings
 {
-    public function __construct(protected Collection $invoices) {}
+    public function __construct(protected Collection $invoices, protected bool $conCobranza = true) {}
 
     public function headings(): array
     {
-        return [
+        $columnas = [
             'Factura', 'Fecha emisión', 'Vencimiento', 'Estado', 'Cliente', 'RUC',
             'Vendedor', 'Orden de compra', 'Guías', 'Forma de pago',
-            'Op. gravadas', 'IGV', 'Total', 'Cobrado', 'Saldo', 'Estado SUNAT',
+            'Op. gravadas', 'IGV', 'Total',
         ];
+
+        // Cobrado y saldo son datos de cobranza.
+        if ($this->conCobranza) {
+            $columnas[] = 'Cobrado';
+            $columnas[] = 'Saldo';
+        }
+
+        $columnas[] = 'Estado SUNAT';
+
+        return $columnas;
     }
 
     public function collection(): Collection
     {
-        return $this->invoices->map(fn ($invoice) => [
+        return $this->invoices->map(fn ($invoice) => array_merge([
             $invoice->full_number,
             $invoice->issue_date?->format('d/m/Y'),
             $invoice->due_date?->format('d/m/Y'),
@@ -36,9 +46,11 @@ class InvoicesExport implements FromCollection, ShouldAutoSize, WithHeadings
             (float) $invoice->taxable_amount,
             (float) $invoice->igv,
             (float) $invoice->total,
+        ], $this->conCobranza ? [
             (float) ($invoice->receivable?->paid_amount ?? 0),
             (float) ($invoice->receivable?->balance ?? 0),
+        ] : [], [
             $invoice->electronicDocument?->sunat_status?->label() ?? '',
-        ]);
+        ]));
     }
 }

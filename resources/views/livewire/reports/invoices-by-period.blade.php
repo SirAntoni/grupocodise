@@ -42,16 +42,34 @@
     <div class="text-sm text-slate-500">
         Periodo: <strong>{{ $start->format('d/m/Y') }} — {{ $end->format('d/m/Y') }}</strong>
         · {{ $invoices->count() }} factura(s)
-        <span class="block text-xs text-slate-400">Los borradores no aparecen: todavía no tienen fecha de emisión.</span>
+        <span class="block text-xs text-slate-400">
+            Los borradores no aparecen: todavía no tienen fecha de emisión.
+            @if ($totals['excluidas'] > 0)
+                · {{ $totals['excluidas'] }} factura(s) anulada(s) o rechazada(s) se listan pero no suman en los totales.
+            @endif
+            @can('receivables.view')
+                @if ($totals['sin_cuenta'] > 0)
+                    · {{ $totals['sin_cuenta'] }} aún no genera(n) cuenta por cobrar (SUNAT no las ha aceptado).
+                @endif
+            @endcan
+        </span>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        @foreach ([
+    @php
+        // El saldo es dato de cobranza: solo lo ve quien tiene ese permiso.
+        $tarjetas = [
             ['Op. gravadas', $totals['gravado'], 'text-slate-900'],
             ['IGV', $totals['igv'], 'text-slate-900'],
             ['Total facturado', $totals['total'], 'text-brand-700'],
-            ['Saldo por cobrar', $totals['saldo'], $totals['saldo'] > 0 ? 'text-amber-700' : 'text-emerald-700'],
-        ] as [$rotulo, $monto, $color])
+        ];
+
+        if (auth()->user()->can('receivables.view')) {
+            $tarjetas[] = ['Saldo por cobrar', $totals['saldo'], $totals['saldo'] > 0 ? 'text-amber-700' : 'text-emerald-700'];
+        }
+    @endphp
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        @foreach ($tarjetas as [$rotulo, $monto, $color])
             <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
                 <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $rotulo }}</p>
                 <p class="mt-1 text-xl font-bold tabular-nums {{ $color }}">S/ {{ number_format($monto, 2) }}</p>
@@ -70,7 +88,9 @@
                     <th class="px-4 py-3">Vendedor</th>
                     <th class="px-4 py-3">Guías</th>
                     <th class="px-4 py-3 text-right">Total</th>
-                    <th class="px-4 py-3 text-right">Saldo</th>
+                    @can('receivables.view')
+                        <th class="px-4 py-3 text-right">Saldo</th>
+                    @endcan
                     <th class="px-4 py-3">Estado</th>
                 </tr>
             </thead>
@@ -88,7 +108,15 @@
                         <td class="px-4 py-2 text-slate-500">{{ $invoice->seller?->name ?? '—' }}</td>
                         <td class="px-4 py-2 font-mono text-xs text-slate-500">{{ $invoice->dispatchGuides->pluck('full_number')->implode(', ') }}</td>
                         <td class="px-4 py-2 text-right tabular-nums">{{ number_format((float) $invoice->total, 2) }}</td>
-                        <td class="px-4 py-2 text-right tabular-nums">{{ number_format((float) ($invoice->receivable?->balance ?? 0), 2) }}</td>
+                        @can('receivables.view')
+                            <td class="px-4 py-2 text-right tabular-nums">
+                                @if ($invoice->receivable)
+                                    {{ number_format((float) $invoice->receivable->balance, 2) }}
+                                @else
+                                    <span class="text-slate-400" title="Aún sin cuenta por cobrar">—</span>
+                                @endif
+                            </td>
+                        @endcan
                         <td class="px-4 py-2">
                             <span class="px-2 py-0.5 rounded-full text-xs {{ $invoice->status->badgeColor() }}">
                                 {{ $invoice->status->label() }}
@@ -96,7 +124,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Sin facturas emitidas en el periodo seleccionado.</td></tr>
+                    <tr><td colspan="{{ auth()->user()->can('receivables.view') ? 9 : 8 }}" class="px-4 py-8 text-center text-slate-400">Sin facturas emitidas en el periodo seleccionado.</td></tr>
                 @endforelse
             </tbody>
         </table>

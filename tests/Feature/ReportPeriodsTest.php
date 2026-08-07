@@ -118,3 +118,55 @@ it('exporta a Excel en los cuatro periodos y mantiene los enlaces antiguos', fun
     // La URL vieja del reporte redirige a la nueva.
     $this->get('/reportes/guias-quincenal')->assertRedirect('/reportes/guias');
 });
+
+it('los totales dejan fuera las anuladas y las rechazadas por SUNAT', function () {
+    $reports = app(ReportService::class);
+    $client = Client::factory()->create();
+
+    $hacerFactura = function (App\Enums\InvoiceStatus $estado, float $total) use ($client) {
+        return App\Models\Invoice::query()->create([
+            'client_id' => $client->id,
+            'status' => $estado,
+            'issue_date' => '2026-07-10',
+            'due_date' => '2026-08-09',
+            'payment_type' => 'credito',
+            'taxable_amount' => round($total / 1.18, 2),
+            'igv' => round($total - $total / 1.18, 2),
+            'total' => $total,
+            'created_by' => User::factory()->create()->id,
+        ]);
+    };
+
+    $hacerFactura(App\Enums\InvoiceStatus::Accepted, 1000);
+    $hacerFactura(App\Enums\InvoiceStatus::PendingSubmission, 500);
+    // Estas dos no son venta válida hoy: una se anuló, la otra la rechazó SUNAT.
+    $hacerFactura(App\Enums\InvoiceStatus::Annulled, 9000);
+    $hacerFactura(App\Enums\InvoiceStatus::Rejected, 7000);
+
+    [$start, $end] = $reports->resolveRange('mensual', ['year' => 2026, 'month' => 7]);
+    $facturas = $reports->invoicesInRange(null, $start, $end, includeAnnulled: true);
+    $totales = $reports->invoiceTotals($facturas);
+
+    expect($facturas)->toHaveCount(4)
+        ->and($totales['total'])->toBe(1500.0)
+        ->and($totales['excluidas'])->toBe(2);
+});
+
+it('no le muestra saldos de cobranza a quien no lleva cobranzas', function () {
+    $this->seed(RolesAndPermissionsSeeder::class);
+
+    $usuario = User::factory()->create();
+    $usuario->assignRole('usuario');
+
+    $this->actingAs($usuario)->get(route('reportes.facturas'))
+        ->assertOk()
+        ->assertDontSee('Saldo por cobrar')
+        ->assertSee('Total facturado');
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->get(route('reportes.facturas'))
+        ->assertOk()
+        ->assertSee('Saldo por cobrar');
+});

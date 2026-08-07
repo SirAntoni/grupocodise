@@ -29,6 +29,9 @@ class InvoicesExportController extends Controller
             (bool) ($data['includeAnnulled'] ?? false),
         );
 
-        return Excel::download(new InvoicesExport($invoices), $reports->fileSlug($period, $start, $end, 'facturas'));
+        return Excel::download(
+            new InvoicesExport($invoices, $request->user()->can('receivables.view')),
+            $reports->fileSlug($period, $start, $end, 'facturas'),
+        );
     }
 }

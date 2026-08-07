@@ -54,12 +54,26 @@
                             <td class="px-3 py-2">{{ $guide->issue_date?->format('d/m/Y') }}</td>
                             <td class="px-3 py-2 font-mono text-slate-500">{{ $guide->requirement?->code ?? '—' }}</td>
                             <td class="px-3 py-2 text-slate-500">{{ $guide->district ?? '—' }}</td>
-                            <td class="px-3 py-2 text-right tabular-nums text-slate-500">{{ $guide->items->count() }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums text-slate-500">{{ $guide->dispatched_items_count }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-        <p class="mt-2 text-xs text-slate-500"><span x-text="marcadas">0</span> guía(s) marcada(s).</p>
+
+        @if ($availableGuides->count() >= 100)
+            <p class="mt-2 text-xs text-amber-700">Se muestran las 100 guías más recientes. Usa el buscador si necesitas una anterior.</p>
+        @endif
     @endif
+
+    {{-- Fuera del @if: si el buscador esconde una guía marcada, el aviso tiene
+         que seguir a la vista para que nadie facture algo que no ve. --}}
+    <p class="mt-2 text-xs text-slate-500">
+        <span x-text="marcadas">0</span> guía(s) marcada(s) a la vista.
+        @if ($guideSearch !== '' && count($selectedGuides) > 0)
+            <span class="font-medium text-amber-700">
+                El buscador está filtrando: en total llevas {{ count($selectedGuides) }} marcada(s).
+            </span>
+        @endif
+    </p>
 </div>

@@ -135,3 +135,74 @@ it('no permite mezclar guías de clientes distintos en una factura', function ()
     expect(fn () => app(InvoiceService::class)->createDraftFromGuideIds([$guide->id, $ajena->id], $this->user))
         ->toThrow(InvalidArgumentException::class, 'mismo cliente');
 });
+
+it('respeta "Sin vendedor" en vez de poner al que registra', function () {
+    $guide = guiaEmitida($this->client, $this->product, $this->user);
+
+    Livewire::actingAs($this->user)
+        ->test(InvoiceForm::class, ['invoice' => null])
+        ->set('clientId', $this->client->id)
+        ->set('sellerId', null)
+        ->set('selectedGuides', [$guide->id])
+        ->call('createDraft')
+        ->assertHasNoErrors();
+
+    expect(Invoice::query()->latest('id')->first()->seller_id)->toBeNull();
+});
+
+it('rechaza guías que no son de la empresa elegida en pantalla', function () {
+    $ajena = guiaEmitida(Client::factory()->create(), $this->product, $this->user);
+
+    // Los ids llegan del navegador: aunque se manipulen, manda la empresa elegida.
+    Livewire::actingAs($this->user)
+        ->test(InvoiceForm::class, ['invoice' => null])
+        ->set('clientId', $this->client->id)
+        ->set('selectedGuides', [$ajena->id])
+        ->call('createDraft')
+        ->assertHasErrors('selectedGuides');
+
+    expect(Invoice::query()->count())->toBe(0);
+});
+
+it('suelta la orden de compra al retirar la guía que la traía', function () {
+    $conOc = guiaEmitida($this->client, $this->product, $this->user);
+    $sinOc = guiaEmitida($this->client, $this->product, $this->user);
+
+    $oc = App\Models\PurchaseOrder::query()->create([
+        'client_id' => $this->client->id,
+        'origin' => App\Enums\PurchaseOrderOrigin::Received,
+        'number' => 'OC-2026-77',
+        'date' => now()->toDateString(),
+        'amount' => 1000,
+        'created_by' => $this->user->id,
+    ]);
+    $conOc->update(['purchase_order_id' => $oc->id]);
+
+    $invoice = app(InvoiceService::class)->createDraftFromGuideIds([$sinOc->id], $this->user);
+    app(InvoiceService::class)->addGuideIds($invoice, [$conOc->id]);
+
+    expect($invoice->fresh()->purchase_order_id)->toBe($oc->id);
+
+    app(InvoiceService::class)->removeGuide($invoice->fresh(), $conOc->fresh());
+
+    expect($invoice->fresh()->purchase_order_id)->toBeNull();
+});
+
+it('descarta de la selección las guías que otro ya facturó', function () {
+    $mia = guiaEmitida($this->client, $this->product, $this->user);
+    $robada = guiaEmitida($this->client, $this->product, $this->user);
+
+    $componente = Livewire::actingAs($this->user)
+        ->test(InvoiceForm::class, ['invoice' => null])
+        ->set('clientId', $this->client->id)
+        ->set('selectedGuides', [$mia->id, $robada->id]);
+
+    // Mientras la pantalla estaba abierta, otro la metió en su factura.
+    app(InvoiceService::class)->createDraftFromGuideIds([$robada->id], $this->user);
+
+    $componente->call('createDraft')->assertHasErrors('selectedGuides');
+
+    // La guía que ya no se puede facturar sale de la selección, así el
+    // usuario puede reintentar sin quedar atascado con una marca invisible.
+    $componente->assertSet('selectedGuides', [$mia->id]);
+});

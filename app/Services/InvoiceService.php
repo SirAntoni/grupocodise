@@ -37,9 +37,9 @@ class InvoiceService
      *
      * @param  list<int>  $guideIds
      */
-    public function createDraftFromGuideIds(array $guideIds, User $user): Invoice
+    public function createDraftFromGuideIds(array $guideIds, User $user, ?int $expectedClientId = null): Invoice
     {
-        return DB::transaction(fn () => $this->createDraft($this->resolveGuidesByIds($guideIds), $user));
+        return DB::transaction(fn () => $this->createDraft($this->resolveGuidesByIds($guideIds), $user, $expectedClientId));
     }
 
     /**
@@ -48,10 +48,12 @@ class InvoiceService
      *
      * @return \Illuminate\Database\Eloquent\Collection<int, DispatchGuide>
      */
-    public function availableGuidesFor(int $clientId, string $search = '')
+    public function availableGuidesFor(int $clientId, string $search = '', int $limit = 100)
     {
         return DispatchGuide::query()
-            ->with(['items', 'requirement'])
+            ->with('requirement')
+            // Solo se factura lo despachado, así que ese es el conteo útil.
+            ->withCount('dispatchedItems')
             ->where('client_id', $clientId)
             ->where('status', DispatchGuideStatus::Issued)
             ->whereDoesntHave('electronicDocument', fn ($q) => $q->where('sunat_status', SunatStatus::Rejected))
@@ -59,14 +61,21 @@ class InvoiceService
             ->when($search !== '', fn ($q) => $q->where('full_number', 'like', '%'.$search.'%'))
             ->orderByDesc('issue_date')
             ->orderByDesc('id')
+            ->limit($limit)
             ->get();
     }
 
-    protected function createDraft($guides, User $user): Invoice
+    protected function createDraft($guides, User $user, ?int $expectedClientId = null): Invoice
     {
         $clientIds = $guides->pluck('client_id')->unique();
         if ($clientIds->count() > 1) {
             throw new InvalidArgumentException('Todas las guías deben pertenecer al mismo cliente.');
+        }
+
+        // Los ids llegan del navegador: la factura debe salir a nombre de la
+        // empresa que el usuario vio en pantalla, no de la que digan las guías.
+        if ($expectedClientId !== null && (int) $clientIds->first() !== (int) $expectedClientId) {
+            throw new InvalidArgumentException('Las guías marcadas no son de la empresa elegida.');
         }
 
         $purchaseOrderIds = $guides->pluck('purchase_order_id')->filter()->unique();
@@ -146,6 +155,13 @@ class InvoiceService
 
         return DB::transaction(function () use ($invoice, $guide) {
             $invoice->dispatchGuides()->detach($guide->id);
+
+            // La OC se hereda de las guías: si se retira la que la traía, la
+            // factura no puede quedarse con una orden que ya nadie respalda.
+            $invoice->update([
+                'purchase_order_id' => $invoice->dispatchGuides()->pluck('purchase_order_id')->filter()->unique()->first(),
+            ]);
+
             $this->consolidateItems($invoice);
 
             return $invoice->refresh()->load('items', 'dispatchGuides');

@@ -157,18 +157,32 @@ class ReportService
     }
 
     /**
-     * Totales del reporte de facturas: lo primero que mira el que cobra.
+     * Totales del reporte de facturas.
      *
-     * @return array{gravado: float, igv: float, total: float, cobrado: float, saldo: float}
+     * Solo suman las facturas que hoy son venta válida: una anulada no vendió
+     * nada (y si se refacturó, contarla duplicaría la venta), y una rechazada
+     * por SUNAT todavía no es comprobante hasta que se corrija y se reenvíe.
+     * Ambas siguen apareciendo en la tabla, pero fuera de las sumas.
+     *
+     * @return array{gravado: float, igv: float, total: float, cobrado: float, saldo: float, excluidas: int, sin_cuenta: int}
      */
     public function invoiceTotals(Collection $invoices): array
     {
+        $validas = $invoices->filter(fn ($i) => in_array($i->status, [
+            InvoiceStatus::PendingSubmission,
+            InvoiceStatus::Accepted,
+        ], true));
+
         return [
-            'gravado' => round((float) $invoices->sum('taxable_amount'), 2),
-            'igv' => round((float) $invoices->sum('igv'), 2),
-            'total' => round((float) $invoices->sum('total'), 2),
-            'cobrado' => round((float) $invoices->sum(fn ($i) => (float) ($i->receivable?->paid_amount ?? 0)), 2),
-            'saldo' => round((float) $invoices->sum(fn ($i) => (float) ($i->receivable?->balance ?? 0)), 2),
+            'gravado' => round((float) $validas->sum('taxable_amount'), 2),
+            'igv' => round((float) $validas->sum('igv'), 2),
+            'total' => round((float) $validas->sum('total'), 2),
+            'cobrado' => round((float) $validas->sum(fn ($i) => (float) ($i->receivable?->paid_amount ?? 0)), 2),
+            'saldo' => round((float) $validas->sum(fn ($i) => (float) ($i->receivable?->balance ?? 0)), 2),
+            'excluidas' => $invoices->count() - $validas->count(),
+            // La cuenta por cobrar nace cuando SUNAT acepta: hasta entonces la
+            // factura no suma saldo, y conviene decirlo en vez de mostrar 0.
+            'sin_cuenta' => $validas->filter(fn ($i) => $i->receivable === null)->count(),
         ];
     }
 

@@ -92,7 +92,7 @@ class Index extends Component
             'amount' => $data['amount'],
             'notes' => $data['notes'],
             'pdf_path' => $this->pdf?->store('ordenes-compra'),
-            'seller_id' => $data['seller_id'] ?? auth()->id(),
+            'seller_id' => $data['seller_id'] ?? null,
             'created_by' => auth()->id(),
         ]);
 

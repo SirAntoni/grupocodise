@@ -84,19 +84,36 @@ class Form extends Component
         ], ['clientId' => 'empresa']);
 
         try {
-            $invoice = $service->createDraftFromGuideIds($this->selectedGuides, auth()->user());
+            $invoice = $service->createDraftFromGuideIds($this->selectedGuides, auth()->user(), $this->clientId);
         } catch (\InvalidArgumentException $e) {
+            $this->reconcileSelection($service);
             $this->addError('selectedGuides', $e->getMessage());
 
             return;
         }
 
-        if ($this->sellerId) {
-            $invoice->update(['seller_id' => $this->sellerId]);
-        }
+        // Sin condición: elegir "Sin vendedor" debe poder dejarlo vacío.
+        $invoice->update(['seller_id' => $this->sellerId]);
 
         session()->flash('ok', 'Borrador de factura creado; digita los precios y emite cuando esté listo.');
         $this->redirectRoute('facturas.editar', ['invoice' => $invoice->id], navigate: true);
+    }
+
+    /**
+     * Descarta de la selección las guías que ya no están disponibles (otro
+     * usuario pudo facturarlas mientras esta pantalla estaba abierta): si no,
+     * la marca invisible bloquea el botón para siempre.
+     */
+    protected function reconcileSelection(InvoiceService $service): void
+    {
+        if ($this->selectedGuides === []) {
+            return;
+        }
+
+        $clientId = $this->invoice?->client_id ?? $this->clientId;
+        $disponibles = $clientId ? $service->availableGuidesFor($clientId)->pluck('id')->all() : [];
+
+        $this->selectedGuides = array_values(array_intersect($this->selectedGuides, $disponibles));
     }
 
     public function addSelectedGuides(InvoiceService $service): void
@@ -113,6 +130,7 @@ class Form extends Component
             $this->savePricing($service);
             $service->addGuideIds($this->invoice, $this->selectedGuides);
         } catch (\InvalidArgumentException $e) {
+            $this->reconcileSelection($service);
             $this->addError('selectedGuides', $e->getMessage());
 
             return;
@@ -213,8 +231,18 @@ class Form extends Component
         $clientId = $this->invoice?->client_id ?? $this->clientId;
 
         return view('livewire.invoices.form', [
-            'clients' => Client::query()->where('is_active', true)->orderBy('business_name')->get(['id', 'business_name', 'ruc']),
-            'sellers' => User::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            // Un cliente desactivado puede tener guías emitidas sin facturar:
+            // si no apareciera, esas guías se quedarían sin poder facturarse.
+            'clients' => Client::query()
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->orWhereHas('dispatchGuides', fn ($g) => $g->where('status', \App\Enums\DispatchGuideStatus::Issued)))
+                ->orderBy('business_name')
+                ->get(['id', 'business_name', 'ruc', 'is_active']),
+            // Y el vendedor ya asignado se conserva aunque lo hayan desactivado.
+            'sellers' => User::query()
+                ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $this->sellerId))
+                ->orderBy('name')
+                ->get(['id', 'name', 'is_active']),
             'availableGuides' => $clientId ? $service->availableGuidesFor($clientId, trim($this->guideSearch)) : collect(),
         ]);
     }
