@@ -51,6 +51,14 @@ return [
     'payment_due_days' => (int) env('FACT_DUE_DAYS', 30),
 
     /*
+     * Boleta de venta: por encima de este monto SUNAT exige identificar al
+     * comprador con su DNI; por debajo se puede emitir sin documento.
+     */
+    'boleta' => [
+        'monto_sin_documento' => (float) env('FACT_BOLETA_SIN_DOC', 700),
+    ],
+
+    /*
      * Detracción (SPOT, D. Leg. 940). El porcentaje sale del catálogo 54 según
      * el bien o servicio elegido; aquí solo va el que se propone por defecto y
      * los datos de la empresa.

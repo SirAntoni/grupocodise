@@ -64,6 +64,38 @@ class SunatCatalogs
         '030' => ['nombre' => 'Contratos de construcción', 'porcentaje' => 4.0],
     ];
 
+    /**
+     * Catálogo 06 — tipos de documento de identidad del cliente.
+     *
+     * @var array<string, string>
+     */
+    public const DOCUMENT_TYPES = [
+        '6' => 'RUC',
+        '1' => 'DNI',
+        '4' => 'Carné de extranjería',
+        '7' => 'Pasaporte',
+        '0' => 'Sin documento (boleta de mostrador)',
+    ];
+
+    /**
+     * Cómo se valida el número según el tipo: el RUC tiene 11 dígitos, el DNI 8
+     * y los demás son alfanuméricos de largo variable.
+     */
+    public static function documentNumberRule(string $type): string
+    {
+        return match ($type) {
+            '6' => 'digits:11',
+            '1' => 'digits:8',
+            '0' => 'max:15',
+            default => 'max:15',
+        };
+    }
+
+    public static function documentTypeLabel(?string $type): string
+    {
+        return self::DOCUMENT_TYPES[$type] ?? 'Documento';
+    }
+
     public static function unitLabel(string $code): string
     {
         return self::UNITS[$code] ?? $code;

@@ -121,8 +121,8 @@ it('autocompleta el cliente desde el RUC en el componente', function () {
     Livewire::actingAs($user)
         ->test(ClientsIndex::class)
         ->call('openCreate')
-        ->set('ruc', '20512345670')
-        ->call('lookupRuc')
+        ->set('document_number', '20512345670')
+        ->call('lookupDocument')
         ->assertHasNoErrors()
         ->assertSet('business_name', 'CONSTRUCTORA NUEVA S.A.C.')
         ->assertSet('address', 'AV. PRIMAVERA 500')
@@ -199,14 +199,14 @@ it('no consume el API si el RUC ya es un cliente registrado', function () {
     $user = testUser();
     $user->assignRole('admin');
 
-    Client::factory()->create(['ruc' => '20512345670', 'business_name' => 'CLIENTE EXISTENTE S.A.C.']);
+    Client::factory()->create(['document_number' => '20512345670', 'business_name' => 'CLIENTE EXISTENTE S.A.C.']);
 
     Livewire::actingAs($user)
         ->test(ClientsIndex::class)
         ->call('openCreate')
-        ->set('ruc', '20512345670')
-        ->call('lookupRuc')
-        ->assertHasErrors('ruc');
+        ->set('document_number', '20512345670')
+        ->call('lookupDocument')
+        ->assertHasErrors('document_number');
 
     Http::assertNothingSent();
 });
@@ -220,7 +220,7 @@ it('exige configurar el token antes de buscar', function () {
     Livewire::actingAs($user)
         ->test(ClientsIndex::class)
         ->call('openCreate')
-        ->set('ruc', '20600896190')
-        ->call('lookupRuc')
-        ->assertHasErrors('ruc');
+        ->set('document_number', '20600896190')
+        ->call('lookupDocument')
+        ->assertHasErrors('document_number');
 });

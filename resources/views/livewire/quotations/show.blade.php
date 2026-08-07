@@ -26,7 +26,7 @@
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Cliente</div>
             <div class="mt-0.5 font-medium text-slate-900">{{ $quotation->client->business_name }}</div>
-            <div class="text-slate-500 font-mono">{{ $quotation->client->ruc }}</div>
+            <div class="text-slate-500 font-mono">{{ $quotation->client->document_number }}</div>
         </div>
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-400">Estado</div>

@@ -5,7 +5,7 @@
             <div>
                 <x-input-label value="Cliente" />
                 <div class="mt-2 text-sm font-medium">{{ $guide->client->business_name }}</div>
-                <div class="text-xs text-slate-500 font-mono">{{ $guide->client->ruc }}</div>
+                <div class="text-xs text-slate-500 font-mono">{{ $guide->client->document_number }}</div>
             </div>
             <div>
                 <x-input-label value="Fecha de inicio de traslado" />

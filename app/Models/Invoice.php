@@ -24,6 +24,7 @@ class Invoice extends Model
     {
         return [
             'status' => InvoiceStatus::class,
+            'document_type' => \App\Enums\SeriesDocumentType::class,
             'issue_date' => 'date',
             'due_date' => 'date',
             'annulled_at' => 'datetime',

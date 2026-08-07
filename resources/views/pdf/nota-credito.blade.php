@@ -44,7 +44,7 @@
             <tr>
                 <td>
                     <span class="label">Señor(es):</span> <strong>{{ $creditNote->invoice->client->business_name }}</strong><br>
-                    <span class="label">RUC:</span> {{ $creditNote->invoice->client->ruc }}
+                    <span class="label">RUC:</span> {{ $creditNote->invoice->client->document_number }}
                 </td>
                 <td width="230" style="vertical-align: top;">
                     <span class="label">Fecha de emisión:</span> {{ $creditNote->issue_date->format('d/m/Y') }}<br>

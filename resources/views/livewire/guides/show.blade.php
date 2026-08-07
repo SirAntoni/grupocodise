@@ -39,7 +39,7 @@
         <div>
             <div class="text-xs font-medium uppercase tracking-wider text-slate-500">Cliente</div>
             <div class="mt-1 font-medium text-slate-900">{{ $guide->client->business_name }}</div>
-            <div class="text-slate-500 font-mono">{{ $guide->client->ruc }}</div>
+            <div class="text-slate-500 font-mono">{{ $guide->client->document_number }}</div>
         </div>
         <div>
             <div class="text-xs font-medium uppercase tracking-wider text-slate-500 mb-1">Estado</div>

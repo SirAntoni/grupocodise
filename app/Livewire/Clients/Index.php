@@ -3,6 +3,7 @@
 namespace App\Livewire\Clients;
 
 use App\Models\Client;
+use App\Support\SunatCatalogs;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -20,9 +21,11 @@ class Index extends Component
 
     public ?int $editingId = null;
 
-    public string $business_name = '';
+    public string $document_type = '6';
 
-    public string $ruc = '';
+    public string $document_number = '';
+
+    public string $business_name = '';
 
     public string $address = '';
 
@@ -42,9 +45,17 @@ class Index extends Component
     protected function rules(): array
     {
         return [
+            'document_type' => ['required', Rule::in(array_keys(SunatCatalogs::DOCUMENT_TYPES))],
+            'document_number' => [
+                'required',
+                SunatCatalogs::documentNumberRule($this->document_type),
+                Rule::unique('clients', 'document_number')
+                    ->where('document_type', $this->document_type)
+                    ->ignore($this->editingId),
+            ],
             'business_name' => ['required', 'string', 'max:255'],
-            'ruc' => ['required', 'digits:11', Rule::unique('clients', 'ruc')->ignore($this->editingId)],
-            'address' => ['required', 'string', 'max:255'],
+            // Una persona natural puede no tener dirección declarada.
+            'address' => [$this->document_type === '6' ? 'required' : 'nullable', 'string', 'max:255'],
             'district' => ['nullable', 'string', 'max:100'],
             'ubigeo' => ['nullable', 'digits:6'],
             'phone' => ['nullable', 'string', 'max:20'],
@@ -54,8 +65,9 @@ class Index extends Component
     }
 
     protected array $validationAttributes = [
-        'business_name' => 'razón social',
-        'ruc' => 'RUC',
+        'document_type' => 'tipo de documento',
+        'document_number' => 'número de documento',
+        'business_name' => 'nombre o razón social',
         'address' => 'dirección',
         'district' => 'distrito',
         'phone' => 'teléfono',
@@ -68,10 +80,20 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /** Cambiar de tipo de documento invalida lo consultado al padrón. */
+    public function updatedDocumentType(): void
+    {
+        $this->rucInfo = null;
+        $this->resetValidation('document_number');
+    }
+
     public function openCreate(): void
     {
         $this->authorize('clients.manage');
-        $this->reset(['editingId', 'business_name', 'ruc', 'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name', 'rucInfo']);
+        $this->reset([
+            'editingId', 'document_type', 'document_number', 'business_name',
+            'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name', 'rucInfo',
+        ]);
         $this->resetValidation();
         $this->showForm = true;
     }
@@ -84,47 +106,74 @@ class Index extends Component
         $this->editingId = $client->id;
         $this->rucInfo = null;
         $this->fill($client->only([
-            'business_name', 'ruc', 'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name',
+            'document_type', 'document_number', 'business_name',
+            'address', 'district', 'ubigeo', 'phone', 'email', 'contact_name',
         ]));
         $this->resetValidation();
         $this->showForm = true;
     }
 
-    /** Autocompleta los datos del cliente desde el padrón SUNAT (API Migo). */
-    public function lookupRuc(\App\Services\MigoService $migo): void
+    /**
+     * Autocompleta los datos desde el padrón (API Migo): por RUC trae la razón
+     * social y el domicilio fiscal; por DNI, los nombres.
+     */
+    public function lookupDocument(\App\Services\MigoService $migo): void
     {
         $this->authorize('clients.manage');
-        $this->resetValidation('ruc');
+        $this->resetValidation('document_number');
         $this->rucInfo = null;
 
-        if (! preg_match('/^\d{11}$/', (string) $this->ruc)) {
-            $this->addError('ruc', 'Digita los 11 dígitos del RUC antes de buscar.');
+        $largo = $this->document_type === '6' ? 11 : 8;
+
+        if (! in_array($this->document_type, ['6', '1'], true)) {
+            $this->addError('document_number', 'La búsqueda automática solo está disponible para RUC y DNI.');
+
+            return;
+        }
+
+        if (! preg_match('/^\d{'.$largo.'}$/', (string) $this->document_number)) {
+            $this->addError('document_number', "Digita los {$largo} dígitos antes de buscar.");
 
             return;
         }
 
         // Si ya es cliente, no hay nada que consultar (ni crédito que gastar).
         $existing = Client::query()
-            ->where('ruc', $this->ruc)
+            ->where('document_type', $this->document_type)
+            ->where('document_number', $this->document_number)
             ->when($this->editingId, fn ($q) => $q->whereKeyNot($this->editingId))
             ->first();
 
         if ($existing) {
-            $this->addError('ruc', "Este RUC ya está registrado como cliente: {$existing->business_name}.");
+            $this->addError('document_number', "Este documento ya está registrado como cliente: {$existing->business_name}.");
 
             return;
         }
 
         if (! $migo->isConfigured()) {
-            $this->addError('ruc', 'La búsqueda automática no está disponible; digita los datos manualmente.');
+            $this->addError('document_number', 'La búsqueda automática no está disponible; digita los datos manualmente.');
 
             return;
         }
 
-        $info = $migo->lookupRuc($this->ruc);
+        if ($this->document_type === '1') {
+            $persona = $migo->lookupDni($this->document_number);
+
+            if ($persona === null) {
+                $this->addError('document_number', 'No se encontró el DNI en el padrón; digita los datos manualmente.');
+
+                return;
+            }
+
+            $this->business_name = trim($persona['nombres'].' '.$persona['apellidos']);
+
+            return;
+        }
+
+        $info = $migo->lookupRuc($this->document_number);
 
         if ($info === null) {
-            $this->addError('ruc', 'No se encontró el RUC en el padrón (o el servicio no respondió); digita los datos manualmente.');
+            $this->addError('document_number', 'No se encontró el RUC en el padrón (o el servicio no respondió); digita los datos manualmente.');
 
             return;
         }
@@ -165,10 +214,13 @@ class Index extends Component
         $clients = Client::query()
             ->when($this->search !== '', fn ($q) => $q->where(fn ($s) => $s
                 ->where('business_name', 'like', "%{$this->search}%")
-                ->orWhere('ruc', 'like', "%{$this->search}%")))
+                ->orWhere('document_number', 'like', "%{$this->search}%")))
             ->orderBy('business_name')
             ->paginate(15);
 
-        return view('livewire.clients.index', ['clients' => $clients]);
+        return view('livewire.clients.index', [
+            'clients' => $clients,
+            'documentTypes' => SunatCatalogs::DOCUMENT_TYPES,
+        ]);
     }
 }

@@ -7,7 +7,7 @@
 
     <div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-200 p-4">
         <x-input-label value="Buscar" />
-        <x-text-input type="text" class="mt-1 block w-full md:w-96" placeholder="Razón social o RUC…"
+        <x-text-input type="text" class="mt-1 block w-full md:w-96" placeholder="Nombre, razón social o documento…"
                       wire:model.live.debounce.300ms="search" />
     </div>
 
@@ -15,8 +15,8 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
-                    <th class="px-4 py-3">RUC</th>
-                    <th class="px-4 py-3">Razón social</th>
+                    <th class="px-4 py-3">Documento</th>
+                    <th class="px-4 py-3">Nombre / razón social</th>
                     <th class="px-4 py-3">Distrito</th>
                     <th class="px-4 py-3">Contacto</th>
                     <th class="px-4 py-3">Estado</th>
@@ -26,7 +26,10 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse ($clients as $client)
                     <tr wire:key="client-{{ $client->id }}" class="transition hover:bg-slate-50/70">
-                        <td class="px-4 py-3 font-mono">{{ $client->ruc }}</td>
+                        <td class="px-4 py-3 font-mono">
+                            {{ $client->document_number }}
+                            <span class="ms-1 text-xs font-sans text-slate-400">{{ \App\Support\SunatCatalogs::documentTypeLabel($client->document_type) }}</span>
+                        </td>
                         <td class="px-4 py-3">{{ $client->business_name }}</td>
                         <td class="px-4 py-3">{{ $client->district ?? '—' }}</td>
                         <td class="px-4 py-3">
@@ -73,16 +76,28 @@
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <x-input-label value="RUC" />
+                        <x-input-label value="Tipo de documento" />
+                        <select wire:model.live="document_type"
+                                class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            @foreach ($documentTypes as $codigo => $etiqueta)
+                                <option value="{{ $codigo }}">{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('document_type')" class="mt-1" />
+
+                        <x-input-label value="Número" class="mt-3" />
                         <div class="mt-1 flex gap-2">
-                            <x-text-input type="text" maxlength="11" class="block w-full" wire:model="ruc"
-                                          wire:keydown.enter="lookupRuc" />
-                            <x-secondary-button wire:click="lookupRuc" wire:loading.attr="disabled" wire:target="lookupRuc" title="Buscar en el padrón SUNAT">
-                                <span wire:loading.remove wire:target="lookupRuc">Buscar</span>
-                                <span wire:loading wire:target="lookupRuc">…</span>
-                            </x-secondary-button>
+                            <x-text-input type="text" maxlength="15" class="block w-full" wire:model="document_number"
+                                          wire:keydown.enter="lookupDocument" />
+                            @if (in_array($document_type, ['6', '1']))
+                                <x-secondary-button wire:click="lookupDocument" wire:loading.attr="disabled" wire:target="lookupDocument"
+                                                    title="Buscar en el padrón de SUNAT/RENIEC">
+                                    <span wire:loading.remove wire:target="lookupDocument">Buscar</span>
+                                    <span wire:loading wire:target="lookupDocument">…</span>
+                                </x-secondary-button>
+                            @endif
                         </div>
-                        <x-input-error :messages="$errors->get('ruc')" class="mt-1" />
+                        <x-input-error :messages="$errors->get('document_number')" class="mt-1" />
                         @if ($rucInfo)
                             <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 font-medium {{ $rucInfo['estado'] === 'ACTIVO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
@@ -96,7 +111,7 @@
                         @endif
                     </div>
                     <div>
-                        <x-input-label value="Razón social" />
+                        <x-input-label value="Nombre o razón social" />
                         <x-text-input type="text" class="mt-1 block w-full" wire:model="business_name" />
                         <x-input-error :messages="$errors->get('business_name')" class="mt-1" />
                     </div>

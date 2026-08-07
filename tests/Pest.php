@@ -30,6 +30,7 @@ function seedSeries(): void
     foreach ([
         ['document_type' => 'guia_remision', 'code' => 'T001'],
         ['document_type' => 'factura', 'code' => 'F001'],
+        ['document_type' => 'boleta', 'code' => 'B001'],
         ['document_type' => 'nota_credito', 'code' => 'FC01'],
     ] as $data) {
         Series::query()->firstOrCreate([...$data, 'environment' => 'beta']);

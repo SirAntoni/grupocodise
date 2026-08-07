@@ -38,7 +38,7 @@ class InvoicesExport implements FromCollection, ShouldAutoSize, WithHeadings
             $invoice->due_date?->format('d/m/Y'),
             $invoice->status->label(),
             $invoice->client->business_name,
-            $invoice->client->ruc,
+            $invoice->client->document_number,
             $invoice->seller?->name ?? '',
             $invoice->purchaseOrder?->number ?? '',
             $invoice->dispatchGuides->pluck('full_number')->implode(', '),

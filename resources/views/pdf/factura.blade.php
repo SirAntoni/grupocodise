@@ -32,7 +32,7 @@
             </td>
             <td align="right">
                 <div class="doc-box">
-                    <div class="title">FACTURA ELECTRÓNICA</div>
+                    <div class="title">{{ mb_strtoupper($invoice->document_type->label()) }} ELECTRÓNICA</div>
                     <div class="number">{{ $invoice->full_number }}</div>
                 </div>
             </td>
@@ -44,7 +44,7 @@
             <tr>
                 <td>
                     <span class="label">Señor(es):</span> <strong>{{ $invoice->client->business_name }}</strong><br>
-                    <span class="label">RUC:</span> {{ $invoice->client->ruc }}<br>
+                    <span class="label">{{ \App\Support\SunatCatalogs::documentTypeLabel($invoice->client->document_type) }}:</span> {{ $invoice->client->document_number }}<br>
                     <span class="label">Dirección:</span> {{ $invoice->client->address }}
                 </td>
                 <td width="220" style="vertical-align: top;">
@@ -142,6 +142,6 @@
     @if ($invoice->electronicDocument?->digest_hash)
         <div class="footnote">Valor resumen: {{ $invoice->electronicDocument->digest_hash }}</div>
     @endif
-    <div class="footnote">Representación impresa de la Factura Electrónica.</div>
+    <div class="footnote">Representación impresa de la {{ $invoice->document_type->label() }} Electrónica.</div>
 </body>
 </html>

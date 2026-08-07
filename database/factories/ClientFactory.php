@@ -14,7 +14,8 @@ class ClientFactory extends Factory
     {
         return [
             'business_name' => mb_strtoupper($this->faker->company()).' S.A.C.',
-            'ruc' => '20'.$this->faker->unique()->numerify('#########'),
+            'document_type' => '6',
+            'document_number' => '20'.$this->faker->unique()->numerify('#########'),
             'address' => $this->faker->streetAddress(),
             'ubigeo' => '150101',
             'district' => $this->faker->city(),

@@ -47,6 +47,7 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>
+                    <th class="px-4 py-3">Tipo</th>
                     <th class="px-4 py-3">Número</th>
                     <th class="px-4 py-3">Cliente</th>
                     <th class="px-4 py-3">Fecha</th>
@@ -61,6 +62,11 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse ($invoices as $invoice)
                     <tr wire:key="invoice-{{ $invoice->id }}">
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {{ $invoice->document_type === \App\Enums\SeriesDocumentType::Receipt ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700' }}">
+                                {{ $invoice->document_type->label() }}
+                            </span>
+                        </td>
                         <td class="px-4 py-3 font-mono">
                             <a href="{{ route('facturas.ver', $invoice) }}" wire:navigate class="font-medium text-brand-600 hover:text-brand-700 hover:underline">
                                 {{ $invoice->full_number ?? 'Borrador #'.$invoice->id }}
@@ -103,7 +109,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="9" class="px-4 py-12 text-center text-sm text-slate-400">Sin facturas que mostrar.</td></tr>
+                    <tr><td colspan="10" class="px-4 py-12 text-center text-sm text-slate-400">Sin facturas que mostrar.</td></tr>
                 @endforelse
             </tbody>
         </table>

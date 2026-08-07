@@ -27,7 +27,7 @@ class GuidesExport implements FromCollection, ShouldAutoSize, WithHeadings
             $guide->issue_date?->format('d/m/Y'),
             $guide->status->label(),
             $guide->client->business_name,
-            $guide->client->ruc,
+            $guide->client->document_number,
             $guide->requirement?->code ?? '',
             $guide->crew_chief,
             $guide->district,

@@ -44,7 +44,7 @@
             <tr>
                 <td>
                     <span class="label">Señor(es):</span> <strong>{{ $quotation->client->business_name }}</strong><br>
-                    <span class="label">RUC:</span> {{ $quotation->client->ruc }}<br>
+                    <span class="label">RUC:</span> {{ $quotation->client->document_number }}<br>
                     <span class="label">Dirección:</span> {{ $quotation->client->address }}
                 </td>
                 <td width="220" style="vertical-align: top;">

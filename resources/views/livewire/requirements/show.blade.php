@@ -17,7 +17,7 @@
         <div>
             <div class="text-slate-500">Cliente</div>
             <div class="font-medium">{{ $requirement->client->business_name }}</div>
-            <div class="text-slate-500 font-mono">{{ $requirement->client->ruc }}</div>
+            <div class="text-slate-500 font-mono">{{ $requirement->client->document_number }}</div>
         </div>
         <div>
             <div class="text-slate-500">Jefe de cuadrilla</div>

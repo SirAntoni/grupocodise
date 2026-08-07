@@ -187,6 +187,8 @@
                     </div>
                     <h3 class="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Facturar una o varias guías</h3>
                     <ol class="mt-2 list-decimal space-y-2 ps-5 text-sm leading-relaxed text-slate-700">
+                        <li>Elige primero el <strong>tipo de comprobante</strong>: <em>factura</em> para empresas con RUC o <em>boleta de venta</em> para personas. Cada uno lleva su propia numeración (F001-… y B001-…). Una factura solo puede emitirse a un cliente con RUC; si es una persona, el sistema te pedirá boleta.</li>
+                        <li>Para la <strong>boleta de mostrador</strong> usa el cliente <em>CLIENTES VARIOS</em>: sirve mientras la venta no pase de S/ 700. Por encima de ese monto SUNAT exige el DNI del comprador, así que hay que registrarlo como cliente.</li>
                         <li><strong>Facturas → Nueva factura</strong>: elige la <strong>empresa</strong> y aparecerán todas sus guías emitidas que aún no están facturadas. <strong>Marca</strong> las que quieras incluir y pulsa <strong>Crear borrador</strong>. Si son muchas, usa el buscador por número.</li>
                         <li>Elige el <strong>vendedor</strong> (quien hizo la venta): se propone tu usuario, pero puedes cambiarlo. Sale impreso en la factura.</li>
                         <li>Dentro del borrador puedes <strong>agregar más guías</strong> de la misma empresa con el mismo selector; los ítems se <strong>consolidan</strong> sumando cantidades por producto. Una guía no puede estar en dos facturas activas — el sistema no la ofrece.</li>

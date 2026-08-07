@@ -38,9 +38,13 @@ class InvoiceService
      *
      * @param  list<int>  $guideIds
      */
-    public function createDraftFromGuideIds(array $guideIds, User $user, ?int $expectedClientId = null): Invoice
-    {
-        return DB::transaction(fn () => $this->createDraft($this->resolveGuidesByIds($guideIds), $user, $expectedClientId));
+    public function createDraftFromGuideIds(
+        array $guideIds,
+        User $user,
+        ?int $expectedClientId = null,
+        SeriesDocumentType $documentType = SeriesDocumentType::Invoice,
+    ): Invoice {
+        return DB::transaction(fn () => $this->createDraft($this->resolveGuidesByIds($guideIds), $user, $expectedClientId, $documentType));
     }
 
     /**
@@ -66,7 +70,7 @@ class InvoiceService
             ->get();
     }
 
-    protected function createDraft($guides, User $user, ?int $expectedClientId = null): Invoice
+    protected function createDraft($guides, User $user, ?int $expectedClientId = null, SeriesDocumentType $documentType = SeriesDocumentType::Invoice): Invoice
     {
         $clientIds = $guides->pluck('client_id')->unique();
         if ($clientIds->count() > 1) {
@@ -86,6 +90,7 @@ class InvoiceService
 
         $invoice = Invoice::query()->create([
             'client_id' => $clientIds->first(),
+            'document_type' => $documentType,
             'purchase_order_id' => $purchaseOrderIds->first(),
             'status' => InvoiceStatus::Draft,
             'payment_type' => 'credito',
@@ -271,6 +276,28 @@ class InvoiceService
     }
 
     /**
+     * Reglas de SUNAT sobre a quién se le puede emitir cada comprobante: la
+     * factura exige RUC, y la boleta solo puede ir sin identificar al comprador
+     * por debajo del monto que fija SUNAT (hoy S/ 700).
+     */
+    protected function assertClientMatchesDocumentType(Invoice $invoice): void
+    {
+        $cliente = $invoice->client;
+
+        if ($invoice->document_type === SeriesDocumentType::Invoice && $cliente->document_type !== '6') {
+            throw new InvalidArgumentException('Una factura solo puede emitirse a un cliente con RUC; para una persona usa boleta de venta.');
+        }
+
+        if ($invoice->document_type === SeriesDocumentType::Receipt
+            && $cliente->document_type === '0'
+            && (float) $invoice->total > (float) config('facturacion.boleta.monto_sin_documento')) {
+            $tope = number_format((float) config('facturacion.boleta.monto_sin_documento'), 0);
+
+            throw new InvalidArgumentException("Sobre S/ {$tope} la boleta debe identificar al comprador: registra su DNI antes de emitir.");
+        }
+    }
+
+    /**
      * Vincula (o desvincula) la orden de compra del cliente. Se hereda de las
      * guías, pero al facturar se puede corregir a mano.
      */
@@ -333,11 +360,13 @@ class InvoiceService
         }
 
         if ($invoice->dispatchGuides()->count() === 0) {
-            throw new InvalidArgumentException('La factura debe consolidar al menos una guía.');
+            throw new InvalidArgumentException('El comprobante debe consolidar al menos una guía.');
         }
 
+        $this->assertClientMatchesDocumentType($invoice);
+
         return DB::transaction(function () use ($invoice, $user) {
-            $numbering = $this->numbering->reserve(SeriesDocumentType::Invoice, $invoice->series_id);
+            $numbering = $this->numbering->reserve($invoice->document_type, $invoice->series_id);
             $issueDate = now();
 
             // Al contado vence el mismo día; al crédito, a los días pactados en

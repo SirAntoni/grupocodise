@@ -35,7 +35,7 @@
         <div>
             <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Cliente</div>
             <div class="mt-0.5 font-medium text-slate-900">{{ $invoice->client->business_name }}</div>
-            <div class="text-slate-500 font-mono">{{ $invoice->client->ruc }}</div>
+            <div class="text-slate-500 font-mono">{{ $invoice->client->document_number }}</div>
         </div>
         <div>
             <div class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Estado</div>

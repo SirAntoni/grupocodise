@@ -18,13 +18,13 @@ class DemoDataSeeder extends Seeder
         }
 
         $clients = [
-            ['business_name' => 'CONSTRUCTORA LOS ANDES S.A.C.', 'ruc' => '20512345678', 'address' => 'Av. Javier Prado Este 4200, Surco', 'ubigeo' => '150140', 'district' => 'Santiago de Surco'],
-            ['business_name' => 'INGENIERÍA Y MONTAJES DEL SUR S.A.', 'ruc' => '20487654321', 'address' => 'Calle Los Talleres 180, Ate', 'ubigeo' => '150103', 'district' => 'Ate'],
-            ['business_name' => 'SERVICIOS ELÉCTRICOS LIMA NORTE E.I.R.L.', 'ruc' => '20609876543', 'address' => 'Av. Túpac Amaru 1500, Comas', 'ubigeo' => '150110', 'district' => 'Comas'],
+            ['business_name' => 'CONSTRUCTORA LOS ANDES S.A.C.', 'document_number' => '20512345678', 'address' => 'Av. Javier Prado Este 4200, Surco', 'ubigeo' => '150140', 'district' => 'Santiago de Surco'],
+            ['business_name' => 'INGENIERÍA Y MONTAJES DEL SUR S.A.', 'document_number' => '20487654321', 'address' => 'Calle Los Talleres 180, Ate', 'ubigeo' => '150103', 'district' => 'Ate'],
+            ['business_name' => 'SERVICIOS ELÉCTRICOS LIMA NORTE E.I.R.L.', 'document_number' => '20609876543', 'address' => 'Av. Túpac Amaru 1500, Comas', 'ubigeo' => '150110', 'district' => 'Comas'],
         ];
 
         foreach ($clients as $data) {
-            Client::query()->firstOrCreate(['ruc' => $data['ruc']], $data);
+            Client::query()->firstOrCreate(['document_number' => $data['document_number']], $data);
         }
 
         $products = [

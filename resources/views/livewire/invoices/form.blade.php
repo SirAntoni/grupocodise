@@ -1,18 +1,27 @@
-<x-page :title="$invoice ? 'Factura — borrador #'.$invoice->id : 'Nueva factura'">
+<x-page :title="$invoice ? $invoice->document_type->label().' — borrador #'.$invoice->id : 'Nuevo comprobante de venta'">
     @unless ($invoice)
         <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 space-y-5">
             <p class="text-sm text-slate-600">
-                Elige la empresa y marca las guías que quieres facturar: se consolidan en un solo borrador.
+                Elige el comprobante, el cliente y marca las guías que quieres facturar: se consolidan en un solo borrador.
             </p>
 
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-4 sm:grid-cols-3">
                 <div>
-                    <x-input-label value="Empresa" />
+                    <x-input-label value="Tipo de comprobante" />
+                    <select wire:model.live="documentType"
+                            class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                        <option value="factura">Factura (empresas con RUC)</option>
+                        <option value="boleta">Boleta de venta (personas)</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('documentType')" class="mt-1" />
+                </div>
+                <div>
+                    <x-input-label value="Cliente" />
                     <select wire:model.live="clientId"
                             class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
                         <option value="">Seleccione…</option>
                         @foreach ($clients as $client)
-                            <option value="{{ $client->id }}">{{ $client->business_name }} — {{ $client->ruc }}</option>
+                            <option value="{{ $client->id }}">{{ $client->business_name }} — {{ $client->document_number }}</option>
                         @endforeach
                     </select>
                     <x-input-error :messages="$errors->get('clientId')" class="mt-1" />
@@ -44,7 +53,7 @@
                 <div>
                     <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Cliente</div>
                     <div class="mt-0.5 font-semibold text-slate-900">{{ $invoice->client->business_name }}</div>
-                    <div class="text-sm text-slate-500 font-mono">{{ $invoice->client->ruc }}</div>
+                    <div class="text-sm text-slate-500 font-mono">{{ $invoice->client->document_number }}</div>
                 </div>
                 <div class="flex items-start gap-4">
                     <div class="w-52">

@@ -25,6 +25,9 @@ class Form extends Component
     /** @var array<int, int> ids de las guías marcadas */
     public array $selectedGuides = [];
 
+    /** factura | boleta — se elige al crear el borrador. */
+    public string $documentType = 'factura';
+
     public ?int $sellerId = null;
 
     public string $paymentType = 'credito';
@@ -50,6 +53,7 @@ class Form extends Component
             $this->invoice = $invoice->load(['client', 'items.product', 'dispatchGuides']);
             $this->authorize('update', $this->invoice);
             $this->clientId = $this->invoice->client_id;
+            $this->documentType = $this->invoice->document_type->value;
             $this->sellerId = $this->invoice->seller_id;
             $this->paymentType = $this->invoice->payment_type;
             $this->creditDays = $this->invoice->credit_days ?: (int) config('facturacion.payment_due_days');
@@ -93,6 +97,7 @@ class Form extends Component
         $this->authorize('create', Invoice::class);
         $this->validate([
             'clientId' => ['required', 'exists:clients,id'],
+            'documentType' => ['required', 'in:factura,boleta'],
             'selectedGuides' => ['required', 'array', 'min:1'],
             'sellerId' => ['nullable', 'exists:users,id'],
         ], [
@@ -101,7 +106,12 @@ class Form extends Component
         ], ['clientId' => 'empresa']);
 
         try {
-            $invoice = $service->createDraftFromGuideIds($this->selectedGuides, auth()->user(), $this->clientId);
+            $invoice = $service->createDraftFromGuideIds(
+                $this->selectedGuides,
+                auth()->user(),
+                $this->clientId,
+                \App\Enums\SeriesDocumentType::from($this->documentType),
+            );
         } catch (\InvalidArgumentException $e) {
             $this->reconcileSelection($service);
             $this->addError('selectedGuides', $e->getMessage());
@@ -112,7 +122,7 @@ class Form extends Component
         // Sin condición: elegir "Sin vendedor" debe poder dejarlo vacío.
         $invoice->update(['seller_id' => $this->sellerId]);
 
-        session()->flash('ok', 'Borrador de factura creado; digita los precios y emite cuando esté listo.');
+        session()->flash('ok', 'Borrador creado; digita los precios y emite cuando esté listo.');
         $this->redirectRoute('facturas.editar', ['invoice' => $invoice->id], navigate: true);
     }
 
@@ -283,7 +293,7 @@ class Form extends Component
                 ->where(fn ($q) => $q->where('is_active', true)
                     ->orWhereHas('dispatchGuides', fn ($g) => $g->where('status', \App\Enums\DispatchGuideStatus::Issued)))
                 ->orderBy('business_name')
-                ->get(['id', 'business_name', 'ruc', 'is_active']),
+                ->get(['id', 'business_name', 'document_number', 'is_active']),
             // Y el vendedor ya asignado se conserva aunque lo hayan desactivado.
             'sellers' => User::query()
                 ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $this->sellerId))

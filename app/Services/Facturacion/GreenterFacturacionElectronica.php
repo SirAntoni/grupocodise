@@ -227,9 +227,13 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
 
     protected function clientFor(\App\Models\Client $client): GreenterClient
     {
+        // La boleta de mostrador va sin identificar al comprador: SUNAT espera
+        // tipo "0" con número en ceros y "clientes varios" como nombre.
+        $sinDocumento = $client->document_type === '0';
+
         return (new GreenterClient)
-            ->setTipoDoc('6')
-            ->setNumDoc($client->ruc)
+            ->setTipoDoc($sinDocumento ? '0' : $client->document_type)
+            ->setNumDoc($sinDocumento ? '00000000' : $client->document_number)
             ->setRznSocial($client->business_name);
     }
 
@@ -250,7 +254,7 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
         // Catálogo 51: 1001 identifica la operación sujeta a detracción (SPOT).
         $document = (new GreenterInvoice)
             ->setUblVersion('2.1')
-            ->setTipoDoc('01')
+            ->setTipoDoc($invoice->document_type->sunatCode())
             ->setTipoOperacion($invoice->has_detraction ? '1001' : '0101')
             ->setSerie($invoice->series->code)
             ->setCorrelativo((string) $invoice->number)

@@ -51,7 +51,7 @@
             <table class="grid">
                 <tr>
                     <td><strong>{{ $guide->client->business_name }}</strong></td>
-                    <td>RUC: {{ $guide->client->ruc }}</td>
+                    <td>RUC: {{ $guide->client->document_number }}</td>
                 </tr>
             </table>
         </div>
