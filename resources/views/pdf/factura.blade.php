@@ -105,10 +105,35 @@
         </div>
     @endif
 
+    @php
+        $detraccion = (float) ($invoice->detraction_amount ?? 0);
+        $netoAPagar = round((float) $invoice->total - $detraccion, 2);
+    @endphp
+
+    @if ($invoice->has_detraction)
+        <div class="section">
+            <span class="label">Operación sujeta al SPOT — D. Leg. 940</span>
+            <div>
+                Cuenta de detracciones Banco de la Nación:
+                <strong>{{ config('facturacion.detraccion.cuenta_banco_nacion') }}</strong>
+                ({{ \App\Support\SunatCatalogs::detractionLabel($invoice->detraction_code) }},
+                {{ rtrim(rtrim(number_format((float) $invoice->detraction_percent, 2), '0'), '.') }}%)
+            </div>
+            <div>
+                Base: S/ {{ number_format((float) $invoice->total, 2) }} ·
+                <strong>Monto de la detracción: S/ {{ number_format($detraccion, 2) }}</strong> ·
+                Neto a pagar: <strong>S/ {{ number_format($netoAPagar, 2) }}</strong>
+            </div>
+        </div>
+    @endif
+
     @if ($invoice->payment_type === 'credito' && $invoice->due_date)
         <div class="section">
-            <span class="label">Cuotas:</span>
-            Cuota 1: S/ {{ number_format((float) $invoice->total, 2) }} — vence el {{ $invoice->due_date->format('d/m/Y') }}
+            <span class="label">Cuotas</span>
+            Cuota 1: S/ {{ number_format($netoAPagar, 2) }} — vence el {{ $invoice->due_date->format('d/m/Y') }}
+            @if ($invoice->credit_days)
+                (crédito a {{ $invoice->credit_days }} días)
+            @endif
         </div>
     @endif
 

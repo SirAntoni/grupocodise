@@ -18,17 +18,36 @@ class ReceivableService
      */
     public function createForInvoice(Invoice $invoice): AccountReceivable
     {
+        $monto = $this->amountToCollect($invoice);
+
         return AccountReceivable::query()->firstOrCreate(
             ['invoice_id' => $invoice->id],
             [
                 'due_date' => $invoice->due_date,
-                'amount' => $invoice->total,
+                'amount' => $monto,
                 'paid_amount' => 0,
-                'balance' => $invoice->total,
+                'balance' => $monto,
                 'traffic_light' => TrafficLight::forDueDate($invoice->due_date),
                 'status' => ReceivableStatus::Pending,
             ],
         );
+    }
+
+    /**
+     * Cuánto se le cobra al cliente. Con detracción, el cliente deposita una
+     * parte en el Banco de la Nación y a la empresa le transfiere el resto:
+     * config decide si la cuenta se lleva por el total (y el depósito se
+     * registra como un pago más) o solo por ese neto.
+     */
+    public function amountToCollect(Invoice $invoice): float
+    {
+        $total = (float) $invoice->total;
+
+        if (! $invoice->has_detraction || config('facturacion.detraccion.cuenta_por_cobrar_por') !== 'neto') {
+            return $total;
+        }
+
+        return round($total - (float) $invoice->detraction_amount, 2);
     }
 
     public function annulForInvoice(Invoice $invoice): void

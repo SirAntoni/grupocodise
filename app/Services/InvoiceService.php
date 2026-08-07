@@ -11,6 +11,7 @@ use App\Jobs\SubmitElectronicDocument;
 use App\Models\DispatchGuide;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Support\SunatCatalogs;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -224,12 +225,96 @@ class InvoiceService
 
             $this->recalculateTotals($invoice);
 
+            // Si cambió el total, la detracción tiene que seguirlo.
+            $this->refreshDetraction($invoice->refresh());
+
             return $invoice->refresh()->load('items');
         });
     }
 
     /**
-     * Emite la factura: numeración, vencimiento a 30 días y cola de envío a SUNAT.
+     * Condiciones de pago de la factura: contado o crédito con sus días, y si
+     * la operación está sujeta a detracción.
+     */
+    public function applyPaymentTerms(
+        Invoice $invoice,
+        string $paymentType,
+        ?int $creditDays,
+        bool $hasDetraction,
+        ?string $detractionCode,
+    ): Invoice {
+        $this->assertEditable($invoice);
+
+        if (! in_array($paymentType, ['contado', 'credito'], true)) {
+            throw new InvalidArgumentException('La forma de pago debe ser contado o crédito.');
+        }
+
+        if ($paymentType === 'credito' && ($creditDays === null || $creditDays < 1)) {
+            throw new InvalidArgumentException('Indica a cuántos días es el crédito.');
+        }
+
+        $codigo = $detractionCode ?: config('facturacion.detraccion.codigo_bien');
+
+        if ($hasDetraction && SunatCatalogs::detractionPercent($codigo) === null) {
+            throw new InvalidArgumentException('Elige el bien o servicio que origina la detracción.');
+        }
+
+        $invoice->update([
+            'payment_type' => $paymentType,
+            'credit_days' => $paymentType === 'credito' ? $creditDays : null,
+            'has_detraction' => $hasDetraction,
+            'detraction_code' => $hasDetraction ? $codigo : null,
+            'detraction_percent' => $hasDetraction ? SunatCatalogs::detractionPercent($codigo) : null,
+        ]);
+
+        return $this->refreshDetraction($invoice->refresh());
+    }
+
+    /**
+     * Vincula (o desvincula) la orden de compra del cliente. Se hereda de las
+     * guías, pero al facturar se puede corregir a mano.
+     */
+    public function applyPurchaseOrder(Invoice $invoice, ?int $purchaseOrderId): Invoice
+    {
+        $this->assertEditable($invoice);
+
+        if ($purchaseOrderId !== null) {
+            $orden = \App\Models\PurchaseOrder::query()->find($purchaseOrderId);
+
+            if (! $orden || $orden->client_id !== $invoice->client_id) {
+                throw new InvalidArgumentException('La orden de compra es de otro cliente.');
+            }
+        }
+
+        $invoice->update(['purchase_order_id' => $purchaseOrderId]);
+
+        return $invoice->refresh();
+    }
+
+    /**
+     * Recalcula el monto de la detracción sobre el total vigente.
+     *
+     * SUNAT deposita en soles enteros, así que el monto se redondea al sol
+     * más cercano (una base de 1 840.80 al 10 % deposita 184, no 184.08).
+     */
+    public function refreshDetraction(Invoice $invoice): Invoice
+    {
+        if (! $invoice->has_detraction) {
+            $invoice->update(['detraction_amount' => null]);
+
+            return $invoice->refresh();
+        }
+
+        $invoice->update([
+            'detraction_amount' => round((float) $invoice->total * (float) $invoice->detraction_percent / 100),
+        ]);
+
+        return $invoice->refresh();
+    }
+
+    /**
+     * Emite la factura: numeración, vencimiento según sus días de crédito y
+     * cola de envío a SUNAT.
      */
     public function issue(Invoice $invoice, User $user): Invoice
     {
@@ -253,17 +338,27 @@ class InvoiceService
 
         return DB::transaction(function () use ($invoice, $user) {
             $numbering = $this->numbering->reserve(SeriesDocumentType::Invoice, $invoice->series_id);
-            $issueDate = now()->toDateString();
+            $issueDate = now();
+
+            // Al contado vence el mismo día; al crédito, a los días pactados en
+            // esta factura (no al ajuste global, que solo sirve de propuesta).
+            $creditDays = $invoice->payment_type === 'credito'
+                ? (int) ($invoice->credit_days ?: config('facturacion.payment_due_days'))
+                : 0;
 
             $invoice->update([
                 'series_id' => $numbering['series']->id,
                 'number' => $numbering['number'],
                 'full_number' => $numbering['full_number'],
                 'status' => InvoiceStatus::PendingSubmission,
-                'issue_date' => $issueDate,
-                'due_date' => now()->addDays((int) config('facturacion.payment_due_days'))->toDateString(),
+                'issue_date' => $issueDate->toDateString(),
+                'credit_days' => $invoice->payment_type === 'credito' ? $creditDays : null,
+                'due_date' => $issueDate->copy()->addDays($creditDays)->toDateString(),
                 'issued_by' => $user->id,
             ]);
+
+            // El monto de la detracción se congela con el total definitivo.
+            $this->refreshDetraction($invoice->refresh());
 
             $document = $invoice->electronicDocument()->create([
                 'environment' => config('facturacion.environment'),
@@ -307,7 +402,12 @@ class InvoiceService
     public function markAccepted(Invoice $invoice): void
     {
         $invoice->update(['status' => InvoiceStatus::Accepted]);
-        $this->receivables->createForInvoice($invoice->refresh());
+
+        // Al contado no hay nada que cobrar después: el tablero de cobranza es
+        // para el seguimiento de las facturas al crédito.
+        if ($invoice->payment_type === 'credito') {
+            $this->receivables->createForInvoice($invoice->refresh());
+        }
     }
 
     /** Llamado por la cola cuando SUNAT rechaza la factura. */

@@ -27,6 +27,16 @@ class Form extends Component
 
     public ?int $sellerId = null;
 
+    public string $paymentType = 'credito';
+
+    public ?int $creditDays = null;
+
+    public bool $hasDetraction = false;
+
+    public ?string $detractionCode = null;
+
+    public ?int $purchaseOrderId = null;
+
     /** @var array<int, string> precios editables por invoice_item_id */
     public array $prices = [];
 
@@ -41,10 +51,17 @@ class Form extends Component
             $this->authorize('update', $this->invoice);
             $this->clientId = $this->invoice->client_id;
             $this->sellerId = $this->invoice->seller_id;
+            $this->paymentType = $this->invoice->payment_type;
+            $this->creditDays = $this->invoice->credit_days ?: (int) config('facturacion.payment_due_days');
+            $this->hasDetraction = (bool) $this->invoice->has_detraction;
+            $this->detractionCode = $this->invoice->detraction_code ?: config('facturacion.detraccion.codigo_bien');
+            $this->purchaseOrderId = $this->invoice->purchase_order_id;
             $this->fillFromInvoice();
         } else {
             $this->authorize('create', Invoice::class);
             $this->sellerId = auth()->id();
+            $this->creditDays = (int) config('facturacion.payment_due_days');
+            $this->detractionCode = config('facturacion.detraccion.codigo_bien');
         }
     }
 
@@ -166,6 +183,7 @@ class Form extends Component
         try {
             $this->savePricing($service);
             $this->saveSeller();
+            $this->savePaymentTerms($service);
         } catch (\InvalidArgumentException $e) {
             session()->now('error', $e->getMessage());
 
@@ -183,6 +201,7 @@ class Form extends Component
         try {
             $this->savePricing($service);
             $this->saveSeller();
+            $this->savePaymentTerms($service);
             $service->issue($this->invoice, auth()->user());
         } catch (\InvalidArgumentException $e) {
             session()->now('error', $e->getMessage());
@@ -193,6 +212,33 @@ class Form extends Component
 
         session()->flash('ok', "Factura {$this->invoice->fresh()->full_number} emitida y en cola de envío a SUNAT.");
         $this->redirectRoute('facturas.ver', ['invoice' => $this->invoice->id], navigate: true);
+    }
+
+    /** Forma de pago, días de crédito, detracción y orden de compra. */
+    protected function savePaymentTerms(InvoiceService $service): void
+    {
+        $this->validate([
+            'paymentType' => ['required', 'in:contado,credito'],
+            'creditDays' => [$this->paymentType === 'credito' ? 'required' : 'nullable', 'integer', 'min:1', 'max:365'],
+            'hasDetraction' => ['boolean'],
+            'detractionCode' => [$this->hasDetraction ? 'required' : 'nullable', 'string'],
+            'purchaseOrderId' => ['nullable', 'exists:purchase_orders,id'],
+        ], [], [
+            'paymentType' => 'forma de pago',
+            'creditDays' => 'días de crédito',
+            'detractionCode' => 'bien o servicio de la detracción',
+            'purchaseOrderId' => 'orden de compra',
+        ]);
+
+        $service->applyPaymentTerms(
+            $this->invoice,
+            $this->paymentType,
+            $this->paymentType === 'credito' ? (int) $this->creditDays : null,
+            $this->hasDetraction,
+            $this->detractionCode,
+        );
+
+        $service->applyPurchaseOrder($this->invoice, $this->purchaseOrderId);
     }
 
     protected function saveSeller(): void
@@ -244,6 +290,10 @@ class Form extends Component
                 ->orderBy('name')
                 ->get(['id', 'name', 'is_active']),
             'availableGuides' => $clientId ? $service->availableGuidesFor($clientId, trim($this->guideSearch)) : collect(),
+            'detractionGoods' => \App\Support\SunatCatalogs::DETRACTION_GOODS,
+            'purchaseOrders' => $this->invoice
+                ? \App\Models\PurchaseOrder::query()->where('client_id', $this->invoice->client_id)->orderByDesc('date')->get(['id', 'number', 'date', 'amount'])
+                : collect(),
         ]);
     }
 }

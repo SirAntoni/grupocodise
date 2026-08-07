@@ -46,7 +46,34 @@ return [
     */
 
     'igv_rate' => (float) env('FACT_IGV_RATE', 0.18),
+
+    // Días de crédito que se proponen al facturar; cada factura puede cambiarlos.
     'payment_due_days' => (int) env('FACT_DUE_DAYS', 30),
+
+    /*
+     * Detracción (SPOT, D. Leg. 940). El porcentaje sale del catálogo 54 según
+     * el bien o servicio elegido; aquí solo va el que se propone por defecto y
+     * los datos de la empresa.
+     *
+     * PENDIENTE DE DATO REAL: `cuenta_banco_nacion` lleva un número de ejemplo.
+     * Cuando el cliente entregue el suyo, se cambia en el .env (FACT_DETRACCION_CUENTA)
+     * sin tocar código: es el único lugar donde se usa.
+     */
+    'detraccion' => [
+        'codigo_bien' => env('FACT_DETRACCION_CODIGO', '037'),
+        'monto_minimo' => (float) env('FACT_DETRACCION_MINIMO', 700),
+        'cuenta_banco_nacion' => env('FACT_DETRACCION_CUENTA', '00-000-000000'),
+        // Catálogo 59: 001 = depósito en cuenta.
+        'medio_pago' => env('FACT_DETRACCION_MEDIO_PAGO', '001'),
+        /*
+         * Con qué monto nace la cuenta por cobrar cuando hay detracción:
+         *   'total' → por el total de la factura; el depósito de la detracción
+         *             se registra después como un pago más (recomendado: los
+         *             números cuadran con el comprobante).
+         *   'neto'  → solo por lo que el cliente transfiere a la empresa.
+         */
+        'cuenta_por_cobrar_por' => env('FACT_DETRACCION_CXC', 'total'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

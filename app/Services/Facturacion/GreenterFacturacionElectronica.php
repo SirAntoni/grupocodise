@@ -19,6 +19,7 @@ use Greenter\Model\Despatch\Shipment;
 use Greenter\Model\Despatch\Transportist;
 use Greenter\Model\Despatch\Vehicle;
 use Greenter\Model\Sale\Cuota;
+use Greenter\Model\Sale\Detraction;
 use Greenter\Model\Sale\FormaPagos\FormaPagoContado;
 use Greenter\Model\Sale\FormaPagos\FormaPagoCredito;
 use Greenter\Model\Sale\Invoice as GreenterInvoice;
@@ -246,10 +247,11 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
             affectation: $item->igv_affectation_code,
         ))->all();
 
+        // Catálogo 51: 1001 identifica la operación sujeta a detracción (SPOT).
         $document = (new GreenterInvoice)
             ->setUblVersion('2.1')
             ->setTipoDoc('01')
-            ->setTipoOperacion('0101')
+            ->setTipoOperacion($invoice->has_detraction ? '1001' : '0101')
             ->setSerie($invoice->series->code)
             ->setCorrelativo((string) $invoice->number)
             ->setFechaEmision($invoice->issue_date->toDateTime())
@@ -263,19 +265,37 @@ class GreenterFacturacionElectronica implements FacturacionElectronica
             ->setValorVenta((float) $invoice->taxable_amount)
             ->setSubTotal((float) $invoice->total)
             ->setMtoImpVenta((float) $invoice->total)
-            ->setDetails($details)
-            ->setLegends([
-                (new Legend)->setCode('1000')->setValue(NumeroALetras::legend((float) $invoice->total)),
-            ]);
+            ->setDetails($details);
+
+        $legends = [
+            (new Legend)->setCode('1000')->setValue(NumeroALetras::legend((float) $invoice->total)),
+        ];
+
+        if ($invoice->has_detraction) {
+            // Catálogo 52: 2006 es la leyenda obligatoria del SPOT.
+            $legends[] = (new Legend)->setCode('2006')->setValue('Operación sujeta a detracción');
+
+            $document->setDetraccion((new Detraction)
+                ->setCodBienDetraccion($invoice->detraction_code)
+                ->setCodMedioPago(config('facturacion.detraccion.medio_pago'))
+                ->setCtaBanco(config('facturacion.detraccion.cuenta_banco_nacion'))
+                ->setPercent((float) $invoice->detraction_percent)
+                ->setMount((float) $invoice->detraction_amount));
+        }
+
+        $document->setLegends($legends);
 
         // SUNAT exige declarar la forma de pago; al crédito lleva cuota única
-        // con el vencimiento a 30 días.
+        // con el vencimiento pactado en la factura. Cuando hay detracción, el
+        // cliente solo transfiere el neto: eso es lo que queda por pagar.
         if ($invoice->payment_type === 'credito') {
-            $document->setFormaPago(new FormaPagoCredito((float) $invoice->total, $invoice->currency));
+            $porPagar = round((float) $invoice->total - (float) ($invoice->detraction_amount ?? 0), 2);
+
+            $document->setFormaPago(new FormaPagoCredito($porPagar, $invoice->currency));
             $document->setCuotas([
                 (new Cuota)
                     ->setMoneda($invoice->currency)
-                    ->setMonto((float) $invoice->total)
+                    ->setMonto($porPagar)
                     ->setFechaPago($invoice->due_date->toDateTime()),
             ]);
         } else {

@@ -47,8 +47,37 @@ class SunatCatalogs
         '06' => 'Devolución total',
     ];
 
+    /**
+     * Catálogo 54 — bienes y servicios sujetos al SPOT (detracción), con su
+     * porcentaje vigente. Solo los que aplican al giro; si mañana entra otro,
+     * se agrega aquí y aparece solo en el formulario.
+     *
+     * @var array<string, array{nombre: string, porcentaje: float}>
+     */
+    public const DETRACTION_GOODS = [
+        '037' => ['nombre' => 'Demás servicios gravados con el IGV', 'porcentaje' => 12.0],
+        '009' => ['nombre' => 'Arena y piedra', 'porcentaje' => 10.0],
+        '013' => ['nombre' => 'Madera', 'porcentaje' => 10.0],
+        '020' => ['nombre' => 'Mantenimiento y reparación de bienes muebles', 'porcentaje' => 12.0],
+        '022' => ['nombre' => 'Otros servicios empresariales', 'porcentaje' => 12.0],
+        '027' => ['nombre' => 'Servicio de transporte de carga', 'porcentaje' => 4.0],
+        '030' => ['nombre' => 'Contratos de construcción', 'porcentaje' => 4.0],
+    ];
+
     public static function unitLabel(string $code): string
     {
         return self::UNITS[$code] ?? $code;
+    }
+
+    public static function detractionLabel(?string $code): string
+    {
+        $bien = self::DETRACTION_GOODS[$code] ?? null;
+
+        return $bien ? $code.' — '.$bien['nombre'] : (string) $code;
+    }
+
+    public static function detractionPercent(?string $code): ?float
+    {
+        return self::DETRACTION_GOODS[$code]['porcentaje'] ?? null;
     }
 }

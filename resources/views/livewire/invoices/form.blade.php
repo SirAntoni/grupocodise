@@ -88,6 +88,84 @@
             </div>
         </div>
 
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+            <h3 class="mb-4 text-sm font-semibold text-slate-900">Condiciones de pago</h3>
+
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <x-input-label value="Forma de pago" />
+                    <select wire:model.live="paymentType"
+                            class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                        <option value="credito">Crédito</option>
+                        <option value="contado">Contado</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('paymentType')" class="mt-1" />
+                </div>
+
+                @if ($paymentType === 'credito')
+                    <div>
+                        <x-input-label value="Días de crédito" />
+                        <x-text-input type="number" min="1" max="365" class="mt-1 block w-full" wire:model="creditDays" />
+                        <x-input-error :messages="$errors->get('creditDays')" class="mt-1" />
+                        <p class="mt-1 text-xs text-slate-500">El vencimiento se calcula al emitir.</p>
+                    </div>
+                @else
+                    <div class="flex items-end">
+                        <p class="pb-2 text-xs text-slate-500">Al contado no genera cuenta por cobrar.</p>
+                    </div>
+                @endif
+
+                <div>
+                    <x-input-label value="Orden de compra" />
+                    <select wire:model="purchaseOrderId"
+                            class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                        <option value="">Sin orden de compra</option>
+                        @foreach ($purchaseOrders as $orden)
+                            <option value="{{ $orden->id }}">{{ $orden->number }} — {{ $orden->date->format('d/m/Y') }} — S/ {{ number_format((float) $orden->amount, 2) }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('purchaseOrderId')" class="mt-1" />
+                </div>
+
+                <div>
+                    <x-input-label value="Detracción (SPOT)" />
+                    <label class="mt-2 inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" wire:model.live="hasDetraction"
+                               class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        Operación sujeta a detracción
+                    </label>
+                    <x-input-error :messages="$errors->get('hasDetraction')" class="mt-1" />
+                </div>
+            </div>
+
+            @if ($hasDetraction)
+                <div class="mt-4 grid gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
+                    <div>
+                        <x-input-label value="Bien o servicio (catálogo 54 de SUNAT)" />
+                        <select wire:model.live="detractionCode"
+                                class="mt-1 block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500">
+                            @foreach ($detractionGoods as $codigo => $bien)
+                                <option value="{{ $codigo }}">{{ $codigo }} — {{ $bien['nombre'] }} ({{ rtrim(rtrim(number_format($bien['porcentaje'], 1), '0'), '.') }}%)</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('detractionCode')" class="mt-1" />
+                    </div>
+                    <div class="flex items-end">
+                        <p class="pb-2 text-xs text-slate-500">
+                            El depósito va a la cuenta de detracciones del Banco de la Nación
+                            <span class="font-mono">{{ config('facturacion.detraccion.cuenta_banco_nacion') }}</span>
+                            y se redondea a soles enteros.
+                            @if ((float) $invoice->total > 0 && (float) $invoice->total < (float) config('facturacion.detraccion.monto_minimo'))
+                                <span class="block font-medium text-amber-700">
+                                    Ojo: esta factura no llega a S/ {{ number_format((float) config('facturacion.detraccion.monto_minimo'), 0) }}, que es el mínimo habitual del SPOT.
+                                </span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            @endif
+        </div>
+
         @php
             $tasaIgv = (float) config('facturacion.igv_rate');
             $lineas = $invoice->items
@@ -103,6 +181,7 @@
              x-data="{
                  lineas: @js($lineas),
                  tasa: {{ $tasaIgv }},
+                 porcentajes: @js(collect($detractionGoods)->map(fn ($b) => $b['porcentaje'])),
                  dosDecimales(n) { return Math.round((n + Number.EPSILON) * 100) / 100 },
                  valor(id) { return Number($wire.prices[id]) || 0 },
                  subtotal(id, cantidad) { return this.dosDecimales(this.valor(id) * cantidad) },
@@ -112,6 +191,9 @@
                  get gravado() { return this.dosDecimales(this.lineas.reduce((s, l) => s + this.subtotal(l.id, l.cantidad), 0) + this.zona) },
                  get igv() { return this.dosDecimales(this.lineas.reduce((s, l) => s + this.igvLinea(l.id, l.cantidad), 0) + this.dosDecimales(this.zona * this.tasa)) },
                  get total() { return this.dosDecimales(this.gravado + this.igv) },
+                 // SUNAT deposita la detracción en soles enteros.
+                 get detraccion() { return $wire.hasDetraction ? Math.round(this.total * (this.porcentajes[$wire.detractionCode] || 0) / 100) : 0 },
+                 get netoAPagar() { return this.dosDecimales(this.total - this.detraccion) },
                  soles(n) { return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
              }">
             <div class="overflow-x-auto">
@@ -170,6 +252,18 @@
                     <div class="flex justify-between"><span class="text-slate-500">Op. gravadas</span><span class="tabular-nums" x-text="'S/ ' + soles(gravado)">S/ {{ number_format((float) $invoice->taxable_amount, 2) }}</span></div>
                     <div class="flex justify-between"><span class="text-slate-500">IGV ({{ rtrim(rtrim(number_format($tasaIgv * 100, 1), '0'), '.') }}%)</span><span class="tabular-nums" x-text="'S/ ' + soles(igv)">S/ {{ number_format((float) $invoice->igv, 2) }}</span></div>
                     <div class="flex justify-between font-semibold text-base text-slate-900 border-t border-slate-200 pt-1.5"><span>Total</span><span class="tabular-nums" x-text="'S/ ' + soles(total)">S/ {{ number_format((float) $invoice->total, 2) }}</span></div>
+                    <template x-if="$wire.hasDetraction">
+                        <div class="space-y-1.5 border-t border-dashed border-slate-200 pt-1.5">
+                            <div class="flex justify-between text-amber-700">
+                                <span>Detracción</span>
+                                <span class="tabular-nums" x-text="'− S/ ' + soles(detraccion)"></span>
+                            </div>
+                            <div class="flex justify-between font-semibold text-slate-900">
+                                <span>Neto a pagar</span>
+                                <span class="tabular-nums" x-text="'S/ ' + soles(netoAPagar)"></span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
