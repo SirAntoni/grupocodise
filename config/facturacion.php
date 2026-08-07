@@ -26,7 +26,7 @@ return [
 
         // Logo para los PDFs: ruta relativa a public/. Si el archivo no existe
         // se imprime solo la razón social, sin romper nada.
-        'logo' => env('FACT_LOGO', 'images/logo-empresa.png'),
+        'logo' => env('FACT_LOGO', 'images/logo-codise.png'),
 
         /*
          * Cuentas para el pie de la factura. Se imprimen solo las que tengan

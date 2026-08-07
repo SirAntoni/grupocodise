@@ -6,8 +6,10 @@
     $tieneLogo = $logoPath && is_file($logoPath);
 @endphp
 
+{{-- dompdf respeta el atributo width y escala el alto solo; con max-height
+     de CSS no lo hace de forma fiable. --}}
 @if ($tieneLogo)
-    <img src="{{ $logoPath }}" alt="" style="max-height: 52px; margin-bottom: 4px;">
+    <img src="{{ $logoPath }}" alt="" width="132" style="margin-bottom: 4px;">
 @endif
 <div class="company-name">{{ $company['razon_social'] }}</div>
 <div>RUC: {{ $company['ruc'] }}</div>
